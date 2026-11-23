@@ -21,6 +21,10 @@
   <img src="docs/taskbar.png" width="700" alt="AJAZZ 82%, DualSense 65%, HS5 70% на панели задач">
 </p>
 
+<p align="center">
+  <a href="../../releases/latest"><img alt="Download" src="https://img.shields.io/badge/Download-BatteryHub--Setup-2EA44F?style=for-the-badge&logo=windows&logoColor=white"></a>
+</p>
+
 > **По-русски:** это форк BatteryHub (Rust) с драйверами для **AJAZZ AJ159 APEX**, **Dark Project HS5 V2**, **AULA F75/F87/F99**, мышей **Attack Shark** и русским интерфейсом. Ниже — установка и поддерживаемые устройства. [Подробности на русском](README-RU.md).
 
 ---
@@ -38,12 +42,9 @@
 - **Автозапуск** с Windows и проверка обновлений.
 - **Лёгкий**: около **0.2 МБ RAM** в простое, один exe, без службы и драйверов.
 
-<table>
-<tr>
-<td width="50%" align="center"><b>Меню и пороги</b><br><img src="docs/menu-ru.png" width="300" alt="Русское меню BatteryHub"></td>
-<td width="50%" align="center"><b>Запрос поддержки устройства</b><br><img src="docs/request-ru.png" width="300" alt="Окно запроса поддержки"></td>
-</tr>
-</table>
+| Меню и пороги | Запрос поддержки устройства |
+|:---:|:---:|
+| <img src="docs/menu-ru.png" width="300" alt="Русское меню BatteryHub"> | <img src="docs/request-ru.png" width="300" alt="Окно запроса поддержки"> |
 
 ---
 
