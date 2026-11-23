@@ -3,6 +3,8 @@
 //! never share or overwrite each other's choices.
 use windows::Win32::UI::WindowsAndMessaging::{AppendMenuW, CreatePopupMenu, HMENU, MF_CHECKED, MF_GRAYED, MF_POPUP, MF_SEPARATOR, MF_STRING, MF_UNCHECKED};
 
+use std::collections::{BTreeMap, HashSet};
+
 use crate::device::DeviceStatus;
 use crate::i18n;
 use crate::install::{self as inst, HKCU};
@@ -27,6 +29,54 @@ pub fn threshold(settings_key: &str, device_key: &str) -> i32 {
 
 pub fn set_threshold(settings_key: &str, device_key: &str, value: i32) -> bool {
     inst::create(HKCU, &key(settings_key)).is_some_and(|k| k.set_dword(device_key, value as u32))
+}
+
+// ---- custom device names / hidden devices / order ---------------------------------------------
+
+fn get_string(settings_key: &str, name: &str) -> Option<String> {
+    inst::open(HKCU, settings_key, false).and_then(|k| k.get(name))
+}
+
+fn set_string(settings_key: &str, name: &str, value: &str) -> bool {
+    inst::create(HKCU, settings_key).is_some_and(|k| k.set_string(name, value))
+}
+
+pub fn load_aliases(settings_key: &str) -> BTreeMap<String, String> {
+    let Some(text) = get_string(settings_key, "DeviceAliases") else { return BTreeMap::new() };
+    text.lines()
+        .filter_map(|l| {
+            let (k, v) = l.split_once('\t')?;
+            (!k.is_empty() && !v.is_empty()).then(|| (k.to_string(), v.to_string()))
+        })
+        .collect()
+}
+
+pub fn save_aliases(settings_key: &str, aliases: &BTreeMap<String, String>) -> bool {
+    let text: String = aliases.iter().map(|(k, v)| format!("{k}\t{v}\n")).collect();
+    set_string(settings_key, "DeviceAliases", text.trim_end())
+}
+
+pub fn load_hidden(settings_key: &str) -> HashSet<String> {
+    get_string(settings_key, "HiddenDevices")
+        .map(|t| t.lines().filter(|l| !l.is_empty()).map(str::to_string).collect())
+        .unwrap_or_default()
+}
+
+pub fn save_hidden(settings_key: &str, hidden: &HashSet<String>) -> bool {
+    let mut keys: Vec<&String> = hidden.iter().collect();
+    keys.sort();
+    let text = keys.iter().map(|k| format!("{k}\n")).collect::<String>();
+    set_string(settings_key, "HiddenDevices", text.trim_end())
+}
+
+pub fn load_order(settings_key: &str) -> Vec<String> {
+    get_string(settings_key, "DeviceOrder")
+        .map(|t| t.lines().filter(|l| !l.is_empty()).map(str::to_string).collect())
+        .unwrap_or_default()
+}
+
+pub fn save_order(settings_key: &str, order: &[String]) -> bool {
+    set_string(settings_key, "DeviceOrder", &order.join("\n"))
 }
 
 /// Low = discharging, a known level, at or below the device's warning level.

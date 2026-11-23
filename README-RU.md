@@ -9,6 +9,8 @@
 - **DualSense** — заряд по USB или Bluetooth (встроенный драйвер BatteryHub).
 - **Уведомления** — низкий заряд, начало зарядки, 100%; режим «Не беспокоить».
 - **История заряда** — график за 24 часа / 7 / 30 дней, скорость разряда и время до нуля.
+- **Окно настроек** — имена, скрытие и порядок устройств, пороги, язык, refresh и автозапуск.
+- **Живой прогноз** — «~6 ч» до нуля в подсказке, когда уже есть история.
 - **AULA F75 / F87 Pro / F99** — заряд через 2.4 ГГц приёмник (отчёт `0x13`, команда `0x4A`).
 - **Attack Shark** — мыши на Xenta (`1D57:FA60`) и на приёмниках Rongyuan (`3151:402D` и другие); протокол общий с AJAZZ-приёмниками.
 - Любые другие устройства, которые BatteryHub умеет читать.
@@ -17,7 +19,7 @@
 
 ## Запуск
 
-Готовый установщик: `release\BatteryHub-Taskbar-Setup-v1.5.0.exe`.
+Готовый установщик: `release\BatteryHub-Taskbar-Setup-v1.6.0.exe`.
 
 Или из исходников:
 
@@ -29,7 +31,7 @@ cargo build --release
 Установка в `%LOCALAPPDATA%\Programs\BatteryHub\Taskbar` с автозапуском:
 
 ```powershell
-.\release\BatteryHub-Taskbar-Setup-v1.5.0.exe /install /S /autostart=yes
+.\release\BatteryHub-Taskbar-Setup-v1.6.0.exe /install /S /autostart=yes
 ```
 
 ## Язык

@@ -135,6 +135,28 @@ impl History {
         let _ = std::fs::write(path, out);
     }
 
+    /// Estimated hours until empty from the last 7 days of discharging samples. None when there is
+    /// not enough data or the level is rising (charging / just unplugged).
+    pub fn eta_hours(&self, key: &str) -> Option<f64> {
+        let cutoff = now() - 7 * 24 * 3600;
+        let pts: Vec<&Sample> = self
+            .samples
+            .iter()
+            .filter(|s| s.key == key && s.ts >= cutoff && !s.charging)
+            .collect();
+        let (first, last) = (pts.first()?, pts.last()?);
+        let hours = (last.ts - first.ts) as f64 / 3600.0;
+        let drop = (first.percent - last.percent) as f64;
+        if hours < 1.0 || drop < 2.0 {
+            return None;
+        }
+        let rate = drop / hours;
+        if rate <= 0.05 {
+            return None;
+        }
+        Some((last.percent as f64 / rate).clamp(0.1, 999.0))
+    }
+
     fn devices_json(&self) -> String {
         let mut seen = BTreeSet::new();
         let mut out = Vec::new();
@@ -235,6 +257,23 @@ fn json(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn eta_from_discharge_curve() {
+        let t = now();
+        let mut h = History::empty();
+        for (dt, p) in [(7200, 80), (3600, 70), (0, 60)] {
+            h.samples.push(Sample {
+                ts: t - dt,
+                key: "k".into(),
+                name: "Mouse".into(),
+                percent: p,
+                charging: false,
+            });
+        }
+        let eta = h.eta_hours("k").expect("eta");
+        assert!((eta - 6.0).abs() < 0.2, "eta={eta}");
+    }
 
     #[test]
     fn html_has_data_and_no_placeholders() {

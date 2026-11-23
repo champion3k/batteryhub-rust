@@ -13,6 +13,7 @@ pub mod listen;
 pub mod report;
 pub mod report_window;
 pub mod settings;
+pub mod settings_window;
 pub mod ui;
 pub mod update;
 pub mod util;

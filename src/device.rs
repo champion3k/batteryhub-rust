@@ -65,6 +65,8 @@ pub struct DeviceStatus {
     pub asleep: bool,
     /// false: receiver present, device switched off.
     pub connected: bool,
+    /// Estimated hours until empty, from the local history. None while charging or without data.
+    pub eta_hours: Option<f64>,
     pub millivolts: i32,
     /// Keep showing the last value this long if the device stops answering.
     pub grace_sec: u32,
@@ -89,6 +91,7 @@ impl Default for DeviceStatus {
             full: false,
             asleep: false,
             connected: true,
+            eta_hours: None,
             millivolts: 0,
             grace_sec: 0,
             vid: 0,
@@ -156,7 +159,12 @@ impl DeviceStatus {
         } else {
             t.on_battery
         };
-        format!("{}, {state}", self.level())
+        let eta = self
+            .eta_hours
+            .filter(|_| self.connected && !self.charging && !self.is_full())
+            .map(|h| format!(" · ~{}", i18n::duration(h)))
+            .unwrap_or_default();
+        format!("{}, {state}{eta}", self.level())
     }
 }
 

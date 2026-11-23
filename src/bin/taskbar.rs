@@ -96,6 +96,7 @@ const ID_LANG_EN: usize = 120;
 const ID_LANG_RU: usize = 121;
 const ID_DND: usize = 122;
 const ID_HISTORY: usize = 123;
+const ID_SETTINGS: usize = 124;
 
 pub const MAIN_CLASS: windows::core::PCWSTR = w!("BatteryHub.Taskbar.Main");
 const STRIP_CLASS: windows::core::PCWSTR = w!("BatteryHub.Taskbar.Strip");
@@ -173,6 +174,10 @@ struct App {
     low_notified: BTreeSet<String>,
     /// Local battery history (30 days, one sample per 30 minutes).
     history: batteryhub::history::History,
+    /// User names, hidden devices and display order from the settings window.
+    aliases: BTreeMap<String, String>,
+    hidden: HashSet<String>,
+    order_pref: Vec<String>,
 }
 
 thread_local! {
@@ -353,10 +358,18 @@ impl App {
     }
 
     fn visible(&self) -> Vec<DeviceStatus> {
-        self.order
-            .iter()
+        let mut keys = self.order.clone();
+        keys.sort_by_key(|k| self.order_pref.iter().position(|x| x == k).unwrap_or(usize::MAX));
+        keys.iter()
             .filter_map(|k| self.devices.get(k))
-            .map(|t| t.status.clone())
+            .filter(|t| !self.hidden.contains(&t.status.key))
+            .map(|t| {
+                let mut s = t.status.clone();
+                if let Some(alias) = self.aliases.get(&s.key) {
+                    s.name = alias.clone();
+                }
+                s
+            })
             .filter(|s| s.connected)
             .collect()
     }
@@ -1049,7 +1062,12 @@ impl App {
         } else {
             ""
         };
-        format!("{}: {level}{state}", d.name)
+        let eta = d
+            .eta_hours
+            .filter(|_| !d.asleep && !d.charging && !d.is_full())
+            .map(|h| format!(" · ~{}", i18n::duration(h)))
+            .unwrap_or_default();
+        format!("{}: {level}{state}{eta}", d.name)
     }
 
     fn hover(&mut self, on: HWND, x: i32) {
@@ -1204,7 +1222,7 @@ impl App {
         let now = Instant::now();
         let dnd = do_not_disturb();
         let mut notes: Vec<(bool, String)> = Vec::new();
-        for s in fresh {
+        for mut s in fresh {
             let prev = self.devices.get(&s.key).map(|t| t.status.clone());
             if !self.order.contains(&s.key) {
                 self.order.push(s.key.clone());
@@ -1216,6 +1234,10 @@ impl App {
                 }
                 self.devices.remove(&s.key);
                 continue;
+            }
+            s.eta_hours = if s.charging || s.is_full() { None } else { self.history.eta_hours(&s.key) };
+            if let Some(alias) = self.aliases.get(&s.key) {
+                s.name = alias.clone();
             }
             if !dnd {
                 let threshold = settings::threshold(SETTINGS_KEY, &s.key);
@@ -1329,6 +1351,9 @@ impl App {
         self.offset_y = batteryhub::util::reg_get_dword(SETTINGS_KEY, "TaskbarOffsetY").unwrap_or(0) as i32;
         self.background = batteryhub::util::reg_get_dword(SETTINGS_KEY, "WidgetBackground").unwrap_or(0) != 0;
         self.choice = widget_choice();
+        self.aliases = settings::load_aliases(SETTINGS_KEY);
+        self.hidden = settings::load_hidden(SETTINGS_KEY);
+        self.order_pref = settings::load_order(SETTINGS_KEY);
     }
 }
 
@@ -1690,6 +1715,7 @@ unsafe fn show_menu() {
             let _ = AppendMenuW(menu, MF_STRING, ID_REFRESH_DEVICES, &windows::core::HSTRING::from(txt.refresh_devices));
             let _ = AppendMenuW(menu, MF_STRING, ID_REFRESH_LEVELS, &windows::core::HSTRING::from(txt.refresh_levels));
             let _ = AppendMenuW(menu, MF_STRING, ID_HISTORY, &windows::core::HSTRING::from(txt.history));
+            let _ = AppendMenuW(menu, MF_STRING, ID_SETTINGS, &windows::core::HSTRING::from(txt.settings));
             let _ = AppendMenuW(menu, MF_SEPARATOR, 0, windows::core::PCWSTR::null());
             // How often the battery levels are read, and whether a device change triggers a read.
             if let Ok(sub) = CreatePopupMenu() {
@@ -1837,6 +1863,30 @@ unsafe fn show_menu() {
                 }
                 ID_HISTORY => {
                     let _ = batteryhub::history::open_report();
+                }
+                ID_SETTINGS => {
+                    let devices = with_app(|a| {
+                        a.devices
+                            .values()
+                            .map(|t| {
+                                let mut s = t.status.clone();
+                                if let Some(alias) = a.aliases.get(&s.key) {
+                                    s.name = alias.clone();
+                                }
+                                s
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                    batteryhub::settings_window::show(devices, main);
+                    with_app(|a| {
+                        a.refresh_settings();
+                        a.paint();
+                        if a.fallback {
+                            a.sync_tray();
+                        }
+                    });
+                    SetTimer(Some(main), TIMER_POLL, refresh_minutes() * 60_000, None);
                 }
                 ID_CHECK_UPDATES => check_for_updates(main, false),
                 ID_BACKGROUND => {
@@ -2107,6 +2157,11 @@ fn main() {
     i18n::init();
     if std::env::args().any(|a| a == "--history") {
         let _ = batteryhub::history::open_report();
+        return;
+    }
+    if std::env::args().any(|a| a == "--settings") {
+        let devices = batteryhub::poll_all_devices();
+        batteryhub::settings_window::show(devices, HWND::default());
         return;
     }
     unsafe {
