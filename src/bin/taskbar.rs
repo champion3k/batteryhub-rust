@@ -6,7 +6,7 @@
 #![windows_subsystem = "windows"]
 
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::ffi::c_void;
 use std::time::Instant;
 
@@ -27,7 +27,8 @@ use windows::Win32::UI::Controls::{
 use windows::Win32::UI::HiDpi::{GetDpiForWindow, SetProcessDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2};
 use windows::Win32::UI::Input::KeyboardAndMouse::{TrackMouseEvent, TME_LEAVE, TRACKMOUSEEVENT};
 use windows::Win32::UI::Shell::{
-    Shell_NotifyIconW, NIF_ICON, NIF_MESSAGE, NIF_SHOWTIP, NIF_TIP, NIM_ADD, NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
+    Shell_NotifyIconW, NIF_ICON, NIF_INFO, NIF_MESSAGE, NIF_SHOWTIP, NIF_TIP, NIIF_INFO, NIIF_WARNING, NIM_ADD, NIM_DELETE,
+    NIM_MODIFY, NOTIFYICONDATAW,
 };
 use windows::Win32::UI::WindowsAndMessaging::*;
 
@@ -47,6 +48,8 @@ const TIMER_QUICK: usize = 5;
 const TIMER_AUTO_UPDATE: usize = 6;
 /// "Update finished" message shortly after the first start of an updated version.
 const TIMER_UPDATED: usize = 7;
+const TIMER_NOTIFY: usize = 8;
+const NOTIFY_UID: u32 = 0xFFFF_FF00;
 /// Automatic update check this long after start-up; when the network is not up yet (e.g. right
 /// at sign-in) it is tried again every AUTO_UPDATE_RETRY_MS, at most AUTO_UPDATE_RETRIES times.
 const AUTO_UPDATE_DELAY_MS: u32 = 2_000;
@@ -91,6 +94,8 @@ const ID_HEIGHT_CUSTOM: usize = 115;
 const HEIGHT_OFFSETS: [i32; 7] = [-15, -10, -5, 0, 5, 10, 15];
 const ID_LANG_EN: usize = 120;
 const ID_LANG_RU: usize = 121;
+const ID_DND: usize = 122;
+const ID_HISTORY: usize = 123;
 
 pub const MAIN_CLASS: windows::core::PCWSTR = w!("BatteryHub.Taskbar.Main");
 const STRIP_CLASS: windows::core::PCWSTR = w!("BatteryHub.Taskbar.Strip");
@@ -164,6 +169,10 @@ struct App {
     background: bool,
     /// Version the setup just updated from (shown once in "Update finished").
     updated_from: Option<String>,
+    /// Low-battery alert already shown for these devices (re-armed after charging / +10%).
+    low_notified: BTreeSet<String>,
+    /// Local battery history (30 days, one sample per 30 minutes).
+    history: batteryhub::history::History,
 }
 
 thread_local! {
@@ -1193,21 +1202,75 @@ impl App {
     /// receiver is remembered for quick checks.
     fn merge(&mut self, fresh: Vec<DeviceStatus>) {
         let now = Instant::now();
+        let dnd = do_not_disturb();
+        let mut notes: Vec<(bool, String)> = Vec::new();
         for s in fresh {
+            let prev = self.devices.get(&s.key).map(|t| t.status.clone());
             if !self.order.contains(&s.key) {
                 self.order.push(s.key.clone());
             }
             if !s.connected {
+                self.low_notified.remove(&s.key);
                 if let Some(hw) = s.hw {
                     self.offline_hw.insert(hw);
                 }
                 self.devices.remove(&s.key);
                 continue;
             }
+            if !dnd {
+                let threshold = settings::threshold(SETTINGS_KEY, &s.key);
+                let low = settings::is_low(&s, threshold);
+                if let Some(prev) = &prev {
+                    if low && !self.low_notified.contains(&s.key) {
+                        notes.push((true, i18n::low_battery(&s.name, s.percent)));
+                        self.low_notified.insert(s.key.clone());
+                    }
+                    if !low && (s.percent > threshold + 10 || s.charging) {
+                        self.low_notified.remove(&s.key);
+                    }
+                    if !prev.charging && s.charging && !s.is_full() {
+                        notes.push((false, i18n::charging_started(&s.name)));
+                    }
+                    if !prev.is_full() && s.is_full() {
+                        notes.push((false, i18n::fully_charged(&s.name)));
+                    }
+                } else if low {
+                    // Do not alert on the first read after start-up, only on a real transition.
+                    self.low_notified.insert(s.key.clone());
+                }
+            }
             self.devices.insert(s.key.clone(), Tracked { status: s, seen: now });
         }
         self.order.retain(|k| self.devices.contains_key(k));
+        let list: Vec<DeviceStatus> = self.devices.values().map(|t| t.status.clone()).collect();
+        self.history.record(&list, batteryhub::history::now());
+        if !notes.is_empty() {
+            self.show_notifications(&notes);
+        }
         self.paint();
+    }
+
+    /// One balloon for all events of this read (Windows shows only the latest balloon anyway).
+    fn show_notifications(&mut self, notes: &[(bool, String)]) {
+        let warning = notes.iter().any(|n| n.0);
+        let body = notes.iter().map(|n| n.1.as_str()).collect::<Vec<_>>().join("\n");
+        unsafe {
+            let hinst = GetModuleHandleW(None).unwrap_or_default();
+            let icon = LoadIconW(Some(hinst.into()), windows::core::PCWSTR(std::ptr::without_provenance(1))).unwrap_or_default();
+            let mut d = self.tray_data(NOTIFY_UID);
+            d.uFlags = NIF_INFO | NIF_ICON | NIF_TIP;
+            d.hIcon = icon;
+            d.uCallbackMessage = WM_TRAY;
+            d.dwInfoFlags = if warning { NIIF_WARNING } else { NIIF_INFO };
+            ui::fill_wide(&mut d.szInfoTitle, "BatteryHub");
+            ui::fill_wide(&mut d.szInfo, &body);
+            ui::fill_wide(&mut d.szTip, "BatteryHub");
+            d.Anonymous.uTimeout = 10_000;
+            if !Shell_NotifyIconW(NIM_MODIFY, &d).as_bool() {
+                let _ = Shell_NotifyIconW(NIM_ADD, &d);
+            }
+            SetTimer(Some(self.main), TIMER_NOTIFY, 15_000, None);
+        }
     }
 
     /// Menu refresh: `devices` = full rescan that drops devices that are gone right away;
@@ -1406,6 +1469,11 @@ fn refresh_on_change() -> bool {
         }
         v => v != 0,
     }
+}
+
+/// Suppress low-battery / charging / full notifications (menu toggle, default off).
+fn do_not_disturb() -> bool {
+    batteryhub::util::reg_get_dword(SETTINGS_KEY, "DoNotDisturb").unwrap_or(0) != 0
 }
 
 /// Check for updates when BatteryHub starts (default off).
@@ -1621,6 +1689,7 @@ unsafe fn show_menu() {
             }
             let _ = AppendMenuW(menu, MF_STRING, ID_REFRESH_DEVICES, &windows::core::HSTRING::from(txt.refresh_devices));
             let _ = AppendMenuW(menu, MF_STRING, ID_REFRESH_LEVELS, &windows::core::HSTRING::from(txt.refresh_levels));
+            let _ = AppendMenuW(menu, MF_STRING, ID_HISTORY, &windows::core::HSTRING::from(txt.history));
             let _ = AppendMenuW(menu, MF_SEPARATOR, 0, windows::core::PCWSTR::null());
             // How often the battery levels are read, and whether a device change triggers a read.
             if let Ok(sub) = CreatePopupMenu() {
@@ -1720,6 +1789,7 @@ unsafe fn show_menu() {
                 let _ = AppendMenuW(sub, MF_STRING | ru, ID_LANG_RU, &windows::core::HSTRING::from(Lang::Ru.native_name()));
                 let _ = AppendMenuW(menu, MF_STRING | MF_POPUP, sub.0 as usize, &windows::core::HSTRING::from(txt.language));
             }
+            let _ = AppendMenuW(menu, MF_STRING | check(do_not_disturb()), ID_DND, &windows::core::HSTRING::from(txt.dnd));
             let _ = AppendMenuW(menu, MF_STRING | check(ui::autostart_enabled(autostart_name())), ID_AUTOSTART, &windows::core::HSTRING::from(txt.autostart));
             let _ = AppendMenuW(menu, MF_STRING | check(auto_update()), ID_AUTO_UPDATE, &windows::core::HSTRING::from(txt.auto_update));
             let _ = AppendMenuW(
@@ -1764,6 +1834,9 @@ unsafe fn show_menu() {
                 }
                 ID_REFRESH_LEVELS => {
                     with_app(|a| a.manual_refresh(false));
+                }
+                ID_HISTORY => {
+                    let _ = batteryhub::history::open_report();
                 }
                 ID_CHECK_UPDATES => check_for_updates(main, false),
                 ID_BACKGROUND => {
@@ -1814,6 +1887,10 @@ unsafe fn show_menu() {
                 }
                 ID_LANG_EN => i18n::set(Lang::En),
                 ID_LANG_RU => i18n::set(Lang::Ru),
+                ID_DND => {
+                    let on = !do_not_disturb();
+                    save_dword("DoNotDisturb", on as u32);
+                }
                 ID_AUTOSTART => {
                     let on = !ui::autostart_enabled(autostart_name());
                     ui::set_autostart(autostart_name(), on);
@@ -1916,6 +1993,13 @@ extern "system" fn main_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LR
                     TIMER_AUTO_UPDATE => {
                         let _ = KillTimer(Some(hwnd), TIMER_AUTO_UPDATE);
                         check_for_updates(hwnd, true);
+                    }
+                    TIMER_NOTIFY => {
+                        let _ = KillTimer(Some(hwnd), TIMER_NOTIFY);
+                        with_app(|a| {
+                            let d = a.tray_data(NOTIFY_UID);
+                            let _ = Shell_NotifyIconW(NIM_DELETE, &d);
+                        });
                     }
                     TIMER_BTWATCH => {
                         // Bluetooth connect / disconnect does not add or remove device nodes, so
@@ -2021,6 +2105,10 @@ extern "system" fn main_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LR
 
 fn main() {
     i18n::init();
+    if std::env::args().any(|a| a == "--history") {
+        let _ = batteryhub::history::open_report();
+        return;
+    }
     unsafe {
         // `--report`: only the "Request support for a device" window (also while BatteryHub runs).
         if std::env::args().any(|a| a == "--report") {

@@ -20,7 +20,7 @@ cargo build --release --manifest-path installer\Cargo.toml --target-dir $target
 if ($LASTEXITCODE) { throw 'setup build failed' }
 
 $version = (Get-Content VERSION -Raw).Trim()
-$label = 'v' + ($version -replace '\.0$', '')
+$label = 'v' + $version
 Remove-Item release -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory release | Out-Null
 foreach ($e in 'Taskbar') {

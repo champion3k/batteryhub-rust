@@ -89,6 +89,8 @@ pub struct Texts {
     pub check_updates: &'static str,
     pub checking_updates: &'static str,
     pub exit: &'static str,
+    pub history: &'static str,
+    pub dnd: &'static str,
     pub red_warning: &'static str,
     pub default_suffix: &'static str,
     pub on_battery: &'static str,
@@ -124,6 +126,8 @@ pub static EN: Texts = Texts {
     check_updates: "Check for updates...",
     checking_updates: "Checking for updates...",
     exit: "Exit",
+    history: "Battery history...",
+    dnd: "Do not disturb",
     red_warning: "Red warning at or below:",
     default_suffix: "  (default)",
     on_battery: "on battery",
@@ -159,6 +163,8 @@ pub static RU: Texts = Texts {
     check_updates: "Проверить обновления...",
     checking_updates: "Проверка обновлений...",
     exit: "Выход",
+    history: "История заряда...",
+    dnd: "Не беспокоить",
     red_warning: "Красный при заряде не выше:",
     default_suffix: "  (по умолчанию)",
     on_battery: "от батареи",
@@ -226,8 +232,8 @@ pub static REPORT_EN: ReportTexts = ReportTexts {
     title_prefix: "Title:",
     empty_model: "(type the device name)",
     opened: "GitHub opened in your browser with the request filled in. Check it and click Create to submit it. Thank you!",
-    failed_copied: "Couldn't open the browser. The request is copied: paste it into a new issue at github.com/ferloom/Wireless-Device-Battery-Monitor/issues.",
-    failed: "Couldn't open the browser. Please open a new issue at github.com/ferloom/Wireless-Device-Battery-Monitor/issues.",
+    failed_copied: "Couldn't open the browser. The request is copied: paste it into a new issue at github.com/champion3k/batteryhub-rust/issues.",
+    failed: "Couldn't open the browser. Please open a new issue at github.com/champion3k/batteryhub-rust/issues.",
     copied_full: "The full report (with every device BatteryHub sees) is copied. Paste it into the GitHub issue if we ask for more details.",
     copy_failed: "Couldn't copy to the clipboard. Please try again.",
 };
@@ -252,8 +258,8 @@ pub static REPORT_RU: ReportTexts = ReportTexts {
     title_prefix: "Заголовок:",
     empty_model: "(введите название устройства)",
     opened: "GitHub открыт в браузере с заполненным запросом. Проверьте его и нажмите Create, чтобы отправить. Спасибо!",
-    failed_copied: "Не удалось открыть браузер. Запрос скопирован: вставьте его в новую задачу на github.com/ferloom/Wireless-Device-Battery-Monitor/issues.",
-    failed: "Не удалось открыть браузер. Откройте новую задачу на github.com/ferloom/Wireless-Device-Battery-Monitor/issues.",
+    failed_copied: "Не удалось открыть браузер. Запрос скопирован: вставьте его в новую задачу на github.com/champion3k/batteryhub-rust/issues.",
+    failed: "Не удалось открыть браузер. Откройте новую задачу на github.com/champion3k/batteryhub-rust/issues.",
     copied_full: "Полный отчёт (со всеми устройствами, которые видит BatteryHub) скопирован. Вставьте его в задачу GitHub, если попросят подробности.",
     copy_failed: "Не удалось скопировать в буфер обмена. Попробуйте ещё раз.",
 };
@@ -262,6 +268,103 @@ pub fn report() -> &'static ReportTexts {
     match current() {
         Lang::Ru => &REPORT_RU,
         Lang::En => &REPORT_EN,
+    }
+}
+
+pub struct HistoryTexts {
+    pub title: &'static str,
+    pub device: &'static str,
+    pub range: &'static str,
+    pub h24: &'static str,
+    pub d7: &'static str,
+    pub d30: &'static str,
+    pub latest: &'static str,
+    pub minimum: &'static str,
+    pub maximum: &'static str,
+    pub change: &'static str,
+    pub samples: &'static str,
+    pub rate: &'static str,
+    pub eta: &'static str,
+    pub no_data: &'static str,
+    pub charging: &'static str,
+    pub on_battery: &'static str,
+    pub chart_title: &'static str,
+    pub chart_sub: &'static str,
+    pub insufficient: &'static str,
+    pub generated: &'static str,
+}
+
+pub static HISTORY_EN: HistoryTexts = HistoryTexts {
+    title: "Battery history",
+    device: "Device",
+    range: "Range",
+    h24: "24 hours",
+    d7: "7 days",
+    d30: "30 days",
+    latest: "Latest",
+    minimum: "Minimum",
+    maximum: "Maximum",
+    change: "Change",
+    samples: "samples",
+    rate: "Discharge",
+    eta: "Time to empty",
+    no_data: "No history yet. Let BatteryHub run for a while.",
+    charging: "Charging",
+    on_battery: "On battery",
+    chart_title: "Battery level",
+    chart_sub: "Hover the chart for exact values",
+    insufficient: "Not enough data for an estimate yet",
+    generated: "Generated",
+};
+
+pub static HISTORY_RU: HistoryTexts = HistoryTexts {
+    title: "История заряда",
+    device: "Устройство",
+    range: "Период",
+    h24: "24 часа",
+    d7: "7 дней",
+    d30: "30 дней",
+    latest: "Сейчас",
+    minimum: "Минимум",
+    maximum: "Максимум",
+    change: "Изменение",
+    samples: "точек",
+    rate: "Разряд",
+    eta: "До нуля",
+    no_data: "Истории пока нет. Дайте BatteryHub поработать.",
+    charging: "Заряжается",
+    on_battery: "От батареи",
+    chart_title: "Уровень заряда",
+    chart_sub: "Наведите на график для точных значений",
+    insufficient: "Пока мало данных для прогноза",
+    generated: "Сформировано",
+};
+
+pub fn history() -> &'static HistoryTexts {
+    match current() {
+        Lang::Ru => &HISTORY_RU,
+        Lang::En => &HISTORY_EN,
+    }
+}
+
+pub fn low_battery(name: &str, percent: i32) -> String {
+    match current() {
+        Lang::Ru => format!("Низкий заряд: {name} — {percent}%"),
+        Lang::En => format!("Low battery: {name} — {percent}%"),
+    }
+}
+
+pub fn charging_started(name: &str) -> String {
+    match current() {
+        Lang::Ru => format!("Зарядка началась: {name}"),
+        Lang::En => format!("Charging started: {name}"),
+    }
+}
+
+pub fn fully_charged(name: &str) -> String {
+    match current() {
+        Lang::Ru => format!("{name}: полностью заряжено"),
+        Lang::En => format!("{name}: fully charged"),
     }
 }
 

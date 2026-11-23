@@ -7,6 +7,8 @@
 - **AJAZZ AJ159 APEX** — заряд и состояние связи через 2.4 ГГц приёмник.
 - **Dark Project HS5 V2** — заряд по Bluetooth. Донгл 2.4 ГГц заряд не передаёт (чип Actions отдаёт только аудио, медиа-клавиши и канал прошивки), поэтому наушники нужно один раз спарить по Bluetooth. Режим 2.4 ГГц при этом можно не отключать.
 - **DualSense** — заряд по USB или Bluetooth (встроенный драйвер BatteryHub).
+- **Уведомления** — низкий заряд, начало зарядки, 100%; режим «Не беспокоить».
+- **История заряда** — график за 24 часа / 7 / 30 дней, скорость разряда и время до нуля.
 - **AULA F75 / F87 Pro / F99** — заряд через 2.4 ГГц приёмник (отчёт `0x13`, команда `0x4A`).
 - **Attack Shark** — мыши на Xenta (`1D57:FA60`) и на приёмниках Rongyuan (`3151:402D` и другие); протокол общий с AJAZZ-приёмниками.
 - Любые другие устройства, которые BatteryHub умеет читать.
@@ -15,7 +17,7 @@
 
 ## Запуск
 
-Готовый установщик: `release\BatteryHub-Taskbar-Setup-v1.4.1.exe`.
+Готовый установщик: `release\BatteryHub-Taskbar-Setup-v1.5.0.exe`.
 
 Или из исходников:
 
@@ -27,7 +29,7 @@ cargo build --release
 Установка в `%LOCALAPPDATA%\Programs\BatteryHub\Taskbar` с автозапуском:
 
 ```powershell
-.\release\BatteryHub-Taskbar-Setup-v1.4.1.exe /install /S /autostart=yes
+.\release\BatteryHub-Taskbar-Setup-v1.5.0.exe /install /S /autostart=yes
 ```
 
 ## Язык
