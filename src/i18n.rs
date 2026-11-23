@@ -90,7 +90,6 @@ pub struct Texts {
     pub checking_updates: &'static str,
     pub exit: &'static str,
     pub history: &'static str,
-    pub settings: &'static str,
     pub dnd: &'static str,
     pub red_warning: &'static str,
     pub default_suffix: &'static str,
@@ -128,7 +127,6 @@ pub static EN: Texts = Texts {
     checking_updates: "Checking for updates...",
     exit: "Exit",
     history: "Battery history...",
-    settings: "Settings...",
     dnd: "Do not disturb",
     red_warning: "Red warning at or below:",
     default_suffix: "  (default)",
@@ -166,7 +164,6 @@ pub static RU: Texts = Texts {
     checking_updates: "Проверка обновлений...",
     exit: "Выход",
     history: "История заряда...",
-    settings: "Настройки...",
     dnd: "Не беспокоить",
     red_warning: "Красный при заряде не выше:",
     default_suffix: "  (по умолчанию)",
@@ -271,58 +268,6 @@ pub fn report() -> &'static ReportTexts {
     match current() {
         Lang::Ru => &REPORT_RU,
         Lang::En => &REPORT_EN,
-    }
-}
-
-pub struct SettingsTexts {
-    pub title: &'static str,
-    pub devices: &'static str,
-    pub rename: &'static str,
-    pub hide: &'static str,
-    pub show: &'static str,
-    pub name: &'static str,
-    pub threshold: &'static str,
-    pub refresh: &'static str,
-    pub close: &'static str,
-    pub hidden: &'static str,
-    pub no_devices: &'static str,
-    pub hint: &'static str,
-}
-
-pub static SETTINGS_EN: SettingsTexts = SettingsTexts {
-    title: "BatteryHub settings",
-    devices: "Devices",
-    rename: "Rename",
-    hide: "Hide",
-    show: "Show",
-    name: "New name (empty resets)",
-    threshold: "Warning threshold",
-    refresh: "Refresh battery",
-    close: "Close",
-    hidden: "hidden",
-    no_devices: "No devices",
-    hint: "Select a device, then rename, hide or move it.",
-};
-
-pub static SETTINGS_RU: SettingsTexts = SettingsTexts {
-    title: "Настройки BatteryHub",
-    devices: "Устройства",
-    rename: "Переименовать",
-    hide: "Скрыть",
-    show: "Показать",
-    name: "Новое имя (пусто — вернуть исходное)",
-    threshold: "Порог предупреждения",
-    refresh: "Обновление заряда",
-    close: "Закрыть",
-    hidden: "скрыто",
-    no_devices: "Устройств нет",
-    hint: "Выберите устройство, затем переименуйте, скройте или переместите его.",
-};
-
-pub fn settings() -> &'static SettingsTexts {
-    match current() {
-        Lang::Ru => &SETTINGS_RU,
-        Lang::En => &SETTINGS_EN,
     }
 }
 
