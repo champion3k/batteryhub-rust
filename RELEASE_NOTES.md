@@ -14,7 +14,7 @@ Already installed? Use *Check for updates...* in the right-click menu (v1.1 and 
 ## New in v1.7.0
 
 - **Amber at 30–50%** — between the normal colour and the red warning level, so a half-empty device no longer looks fine.
-- **Pulsing charging bolt** — fades 100 ↔ 180 while a device charges. Follows the Windows "Animation effects" setting and costs nothing in idle.
+- **Pulsing charging bolt** — fades 100 ↔ 180 while a device charges. Follows the Windows "Animation effects" setting and costs nothing in idle; can be switched off in the menu.
 - **Month at a glance** — a 24 hours × 30 days heatmap in the live dashboard: see at which hours the battery drains.
 - **Charge events on the chart** — dashed markers and labels for *on power* and *unplugged*.
 - **Smooth range switch** — 24 h / 7 / 30 days crossfades instead of jumping, respecting reduced motion.

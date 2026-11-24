@@ -99,6 +99,7 @@ const ID_LANG_EN: usize = 120;
 const ID_LANG_RU: usize = 121;
 const ID_DND: usize = 122;
 const ID_HISTORY: usize = 123;
+const ID_CHARGING_PULSE: usize = 124;
 
 pub const MAIN_CLASS: windows::core::PCWSTR = w!("BatteryHub.Taskbar.Main");
 const STRIP_CLASS: windows::core::PCWSTR = w!("BatteryHub.Taskbar.Strip");
@@ -182,6 +183,8 @@ struct App {
     /// The charging bolt is pulsing right now (a timer repaints it) and is in the dim phase.
     pulsing: bool,
     pulse_dim: bool,
+    /// "Charging pulse" menu setting (default on).
+    pulse_enabled: bool,
     icon_cache: BTreeMap<String, Option<batteryhub::icons::Icon>>,
 }
 
@@ -421,8 +424,10 @@ impl App {
 
         let mut pieces: Vec<Piece> = Vec::new();
         let devices = self.visible();
-        // The bolt breathes while a device charges, unless Windows animations are off.
-        let pulse = ui::animations_enabled()
+        // The bolt breathes while a device charges, unless the user turned it off or Windows
+        // animations are off.
+        let pulse = self.pulse_enabled
+            && ui::animations_enabled()
             && devices.iter().any(|d| !d.asleep && d.is_charging() && !d.is_full());
         self.sync_pulse(pulse);
         let bolt_alpha = if self.pulse_dim { 100 } else { 180 };
@@ -1434,6 +1439,7 @@ impl App {
         self.offset = batteryhub::util::reg_get_dword(SETTINGS_KEY, "TaskbarOffset").unwrap_or(0);
         self.offset_y = batteryhub::util::reg_get_dword(SETTINGS_KEY, "TaskbarOffsetY").unwrap_or(0) as i32;
         self.background = batteryhub::util::reg_get_dword(SETTINGS_KEY, "WidgetBackground").unwrap_or(0) != 0;
+        self.pulse_enabled = charging_pulse();
         self.choice = widget_choice();
         self.icon_paths = settings::load_icons(SETTINGS_KEY);
         self.icon_sizes = settings::load_icon_sizes(SETTINGS_KEY);
@@ -1592,6 +1598,11 @@ fn refresh_on_change() -> bool {
 /// Suppress low-battery / charging / full notifications (menu toggle, default off).
 fn do_not_disturb() -> bool {
     batteryhub::util::reg_get_dword(SETTINGS_KEY, "DoNotDisturb").unwrap_or(0) != 0
+}
+
+/// Pulsing charging bolt in the taskbar widget (default on).
+fn charging_pulse() -> bool {
+    batteryhub::util::reg_get_dword(SETTINGS_KEY, "ChargingPulse").unwrap_or(1) != 0
 }
 
 /// Check for updates when BatteryHub starts (default off).
@@ -1836,6 +1847,12 @@ unsafe fn show_menu() {
                 ID_BACKGROUND,
                 &windows::core::HSTRING::from(txt.background),
             );
+            let _ = AppendMenuW(
+                menu,
+                MF_STRING | check(charging_pulse()),
+                ID_CHARGING_PULSE,
+                &windows::core::HSTRING::from(txt.charging_pulse),
+            );
             if let Ok(sub) = CreatePopupMenu() {
                 let mut checked = ID_POSITION_CUSTOM;
                 for (i, px) in POSITION_OFFSETS.iter().enumerate() {
@@ -1961,6 +1978,14 @@ unsafe fn show_menu() {
                     with_app(|a| {
                         a.background = !a.background;
                         save_dword("WidgetBackground", a.background as u32);
+                        a.paint();
+                    });
+                }
+                ID_CHARGING_PULSE => {
+                    let on = !charging_pulse();
+                    save_dword("ChargingPulse", on as u32);
+                    with_app(|a| {
+                        a.pulse_enabled = on;
                         a.paint();
                     });
                 }
