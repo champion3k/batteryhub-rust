@@ -65,6 +65,11 @@ pub fn low_color(light: bool) -> COLORREF {
     if light { rgb(196, 30, 40) } else { rgb(255, 90, 90) }
 }
 
+/// Amber: getting low, but still above the device's warning level.
+pub fn amber_color(light: bool) -> COLORREF {
+    if light { rgb(154, 91, 0) } else { rgb(255, 180, 84) }
+}
+
 /// Bolt colour for a device on power, None when it runs on battery.
 pub fn bolt_color(s: &DeviceStatus, light: bool) -> Option<COLORREF> {
     if s.is_full() {
@@ -88,7 +93,40 @@ pub fn level_color(s: &DeviceStatus, light: bool, normal: COLORREF, threshold: i
     if crate::settings::is_low(s, threshold) {
         return low_color(light);
     }
-    normal
+    if s.percent < 0 || s.percent > 50 {
+        return normal;
+    }
+    amber_color(light)
+}
+
+/// Colour of the percentage text on the taskbar: red at or below the threshold, amber up to
+/// 50%, `normal` above. While on power the bolt carries the state, so the text stays `normal`.
+pub fn level_text_color(s: &DeviceStatus, light: bool, normal: COLORREF, threshold: i32) -> COLORREF {
+    if crate::settings::is_low(s, threshold) {
+        return low_color(light);
+    }
+    if s.percent < 0 || s.percent > 50 || s.charging || s.is_full() {
+        return normal;
+    }
+    amber_color(light)
+}
+
+/// Battery animation (the charging bolt) follows the Windows "Animation effects" setting.
+pub fn animations_enabled() -> bool {
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SystemParametersInfoW, SPI_GETCLIENTAREAANIMATION, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
+    };
+    let mut on: i32 = 1;
+    unsafe {
+        SystemParametersInfoW(
+            SPI_GETCLIENTAREAANIMATION,
+            0,
+            Some(&mut on as *mut i32 as *mut c_void),
+            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+        )
+        .is_ok()
+            && on != 0
+    }
 }
 
 pub fn font(height: i32, weight: i32, face: &str) -> HFONT {
@@ -355,8 +393,23 @@ mod tests {
     fn red_only_at_or_below_the_chosen_level_and_never_while_charging() {
         let normal = rgb(1, 2, 3);
         assert_eq!(level_color(&dev(30, false, false), false, normal, 30), low_color(false));
-        assert_eq!(level_color(&dev(31, false, false), false, normal, 30), normal);
+        assert_eq!(level_color(&dev(31, false, false), false, normal, 30), amber_color(false));
         assert_eq!(level_color(&dev(10, true, false), false, normal, 30), charging_color(false));
         assert_eq!(level_color(&dev(50, false, false), false, normal, 50), low_color(false));
+        assert_eq!(level_color(&dev(50, false, false), false, normal, 15), amber_color(false));
+        assert_eq!(level_color(&dev(51, false, false), false, normal, 15), normal);
+        assert_eq!(level_color(&dev(-1, false, false), false, normal, 15), normal);
+    }
+
+    #[test]
+    fn text_is_amber_between_threshold_and_fifty() {
+        let normal = rgb(1, 2, 3);
+        assert_eq!(level_text_color(&dev(15, false, false), false, normal, 15), low_color(false));
+        assert_eq!(level_text_color(&dev(16, false, false), false, normal, 15), amber_color(false));
+        assert_eq!(level_text_color(&dev(50, false, false), false, normal, 15), amber_color(false));
+        assert_eq!(level_text_color(&dev(51, false, false), false, normal, 15), normal);
+        assert_eq!(level_text_color(&dev(80, false, false), false, normal, 15), normal);
+        assert_eq!(level_text_color(&dev(30, true, false), false, normal, 15), normal);
+        assert_eq!(level_text_color(&dev(-1, false, false), false, normal, 15), normal);
     }
 }

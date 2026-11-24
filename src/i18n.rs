@@ -313,6 +313,10 @@ pub struct HistoryTexts {
     pub theme: &'static str,
     pub light: &'static str,
     pub dark: &'static str,
+    pub heatmap_title: &'static str,
+    pub heatmap_sub: &'static str,
+    pub event_charge: &'static str,
+    pub event_unplug: &'static str,
 }
 
 pub static HISTORY_EN: HistoryTexts = HistoryTexts {
@@ -339,6 +343,10 @@ pub static HISTORY_EN: HistoryTexts = HistoryTexts {
     theme: "Theme",
     light: "Light theme",
     dark: "Dark theme",
+    heatmap_title: "Month at a glance",
+    heatmap_sub: "Average charge by hour, last 30 days",
+    event_charge: "on power",
+    event_unplug: "unplugged",
 };
 
 pub static HISTORY_RU: HistoryTexts = HistoryTexts {
@@ -365,6 +373,10 @@ pub static HISTORY_RU: HistoryTexts = HistoryTexts {
     theme: "Тема",
     light: "Светлая тема",
     dark: "Тёмная тема",
+    heatmap_title: "Месяц как на ладони",
+    heatmap_sub: "Средний заряд по часам за 30 дней",
+    event_charge: "на зарядке",
+    event_unplug: "снято",
 };
 
 pub fn history() -> &'static HistoryTexts {

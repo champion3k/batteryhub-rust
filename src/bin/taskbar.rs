@@ -50,6 +50,8 @@ const TIMER_AUTO_UPDATE: usize = 6;
 /// "Update finished" message shortly after the first start of an updated version.
 const TIMER_UPDATED: usize = 7;
 const TIMER_NOTIFY: usize = 8;
+/// Repaints the charging bolt between full and dim while a device charges.
+const TIMER_PULSE: usize = 9;
 const NOTIFY_UID: u32 = 0xFFFF_FF00;
 /// Automatic update check this long after start-up; when the network is not up yet (e.g. right
 /// at sign-in) it is tried again every AUTO_UPDATE_RETRY_MS, at most AUTO_UPDATE_RETRIES times.
@@ -177,6 +179,9 @@ struct App {
     /// Per-device icon files and the decoded image cache.
     icon_paths: BTreeMap<String, String>,
     icon_sizes: BTreeMap<String, i32>,
+    /// The charging bolt is pulsing right now (a timer repaints it) and is in the dim phase.
+    pulsing: bool,
+    pulse_dim: bool,
     icon_cache: BTreeMap<String, Option<batteryhub::icons::Icon>>,
 }
 
@@ -396,10 +401,12 @@ impl App {
     /// Renders the strip and hands it to the layered window.
     fn paint(&mut self) {
         if self.fallback {
+            self.sync_pulse(false);
             self.sync_tray();
             return;
         }
         if self.strip.0.is_null() {
+            self.sync_pulse(false);
             return;
         }
         self.painted_for = self.render_target();
@@ -408,13 +415,17 @@ impl App {
         let light = self.light;
         // Same colours, fonts and spacing as the original C++ widget.
         let fg = if light { rgb(0, 0, 0) } else { rgb(255, 255, 255) };
-        let red = ui::low_color(light);
         let icons = make_font(px(16.0), 400, "Segoe Fluent Icons", "Segoe MDL2 Assets", 0);
         let bolt = make_font(px(11.0), 400, "Segoe Fluent Icons", "Segoe MDL2 Assets", 0);
         let text = make_font(px(13.0), 400, "Segoe UI Variable Text", "Segoe UI", px(12.0));
 
         let mut pieces: Vec<Piece> = Vec::new();
         let devices = self.visible();
+        // The bolt breathes while a device charges, unless Windows animations are off.
+        let pulse = ui::animations_enabled()
+            && devices.iter().any(|d| !d.asleep && d.is_charging() && !d.is_full());
+        self.sync_pulse(pulse);
+        let bolt_alpha = if self.pulse_dim { 100 } else { 180 };
         if devices.is_empty() {
             // Battery-unknown glyph, so there is always something to right-click.
             pieces.push(Piece {
@@ -428,8 +439,10 @@ impl App {
         }
         for (i, d) in devices.iter().enumerate() {
             let alpha = if d.asleep { 120 } else { 255 };
-            // Red at or below this device's own warning level (right-click menu, default 15%).
-            let low = settings::is_low(d, settings::threshold(SETTINGS_KEY, &d.key));
+            // Red at or below this device's own warning level (right-click menu, default 15%),
+            // amber up to 50%, normal above.
+            let threshold = settings::threshold(SETTINGS_KEY, &d.key);
+            let level_color = ui::level_text_color(d, light, fg, threshold);
             // Lightning bolt on power: green while charging, blue once it reached 100%.
             let bolt_color = ui::bolt_color(d, light);
             let mark = bolt_color.is_some();
@@ -472,7 +485,7 @@ impl App {
                     dev: Some(i),
                     m: mask(&t, text, light),
                     icon: None,
-                    color: if low { red } else { fg },
+                    color: level_color,
                     alpha,
                     gap_after: if mark { px(2.0) } else { 0 },
                 });
@@ -483,7 +496,7 @@ impl App {
                     m: mask("\u{E945}", bolt, light),
                     icon: None,
                     color: c,
-                    alpha,
+                    alpha: if pulse { bolt_alpha } else { alpha },
                     gap_after: 0,
                 });
             }
@@ -712,6 +725,7 @@ impl App {
         dbg_log(&format!("fallback to notification-area icons: {on}"));
         self.fallback = on;
         if on {
+            self.sync_pulse(false);
             self.hide_tip();
             self.drop_mirrors();
             if !self.strip.0.is_null() {
@@ -724,6 +738,25 @@ impl App {
             self.remove_tray();
             self.last_place = Default::default();
             self.paint();
+        }
+    }
+
+    /// Starts or stops the charging-bolt pulse timer.
+    fn sync_pulse(&mut self, on: bool) {
+        if on == self.pulsing {
+            return;
+        }
+        self.pulsing = on;
+        if self.main.0.is_null() {
+            return;
+        }
+        unsafe {
+            if on {
+                SetTimer(Some(self.main), TIMER_PULSE, 650, None);
+            } else {
+                let _ = KillTimer(Some(self.main), TIMER_PULSE);
+                self.pulse_dim = false;
+            }
         }
     }
 
@@ -2143,6 +2176,14 @@ extern "system" fn main_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LR
                         with_app(|a| {
                             let d = a.tray_data(NOTIFY_UID);
                             let _ = Shell_NotifyIconW(NIM_DELETE, &d);
+                        });
+                    }
+                    TIMER_PULSE => {
+                        with_app(|a| {
+                            if a.pulsing {
+                                a.pulse_dim = !a.pulse_dim;
+                                a.paint();
+                            }
                         });
                     }
                     TIMER_BTWATCH => {

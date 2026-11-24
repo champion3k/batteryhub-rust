@@ -1,4 +1,4 @@
-# BatteryHub v1.6.3 (Rust)
+# BatteryHub v1.7.0 (Rust)
 
 An ultra-lightweight Rust implementation of BatteryHub for Windows, a recode of [krisgfx9/Wireless-Device-Battery-Monitor](https://github.com/krisgfx9/Wireless-Device-Battery-Monitor). All credit for the original idea, look and device protocols goes to the original project.
 
@@ -6,10 +6,19 @@ An ultra-lightweight Rust implementation of BatteryHub for Windows, a recode of 
 
 | File | |
 |---|---|
-| `BatteryHub-Taskbar-Setup-v1.6.3.exe` | Setup: Install / Update / Uninstall |
+| `BatteryHub-Taskbar-Setup-v1.7.0.exe` | Setup: Install / Update / Uninstall |
 | `SHA256SUMS.txt` | Checksum |
 
 Already installed? Use *Check for updates...* in the right-click menu (v1.1 and later), or run the new setup and choose **[2] Update**. Your settings and autostart choice are kept.
+
+## New in v1.7.0
+
+- **Amber at 30–50%** — between the normal colour and the red warning level, so a half-empty device no longer looks fine.
+- **Pulsing charging bolt** — fades 100 ↔ 180 while a device charges. Follows the Windows "Animation effects" setting and costs nothing in idle.
+- **Month at a glance** — a 24 hours × 30 days heatmap in the live dashboard: see at which hours the battery drains.
+- **Charge events on the chart** — dashed markers and labels for *on power* and *unplugged*.
+- **Smooth range switch** — 24 h / 7 / 30 days crossfades instead of jumping, respecting reduced motion.
+- **Light and dark taskbar previews** plus an animated pulse demo in the README; a GitHub social preview image is in `docs/`.
 
 ## New in v1.6.3
 

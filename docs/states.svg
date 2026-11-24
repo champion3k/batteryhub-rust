@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="452" viewBox="0 0 1200 452" role="img" aria-label="Состояния BatteryHub: обычный заряд, низкий заряд, зарядка, заряжено, сон, кабель без процента">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="470" viewBox="0 0 1200 470" role="img" aria-label="Состояния BatteryHub: обычный заряд, янтарный, низкий, зарядка, заряжено, сон, кабель, нет данных">
   <defs>
     <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0B1220"/>
@@ -9,101 +9,127 @@
       <stop offset="1" stop-color="#0078D4" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="glow2b" cx="0.95" cy="1" r="0.7">
-      <stop offset="0" stop-color="#6CCB5F" stop-opacity="0.12"/>
-      <stop offset="1" stop-color="#6CCB5F" stop-opacity="0"/>
+      <stop offset="0" stop-color="#FFB454" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#FFB454" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="1200" height="452" rx="18" fill="url(#bg2)"/>
-  <rect width="1200" height="452" rx="18" fill="url(#glow2a)"/>
-  <rect width="1200" height="452" rx="18" fill="url(#glow2b)"/>
-  <rect x="0.5" y="0.5" width="1199" height="451" rx="17.5" fill="none" stroke="#243044"/>
+  <rect width="1200" height="470" rx="18" fill="url(#bg2)"/>
+  <rect width="1200" height="470" rx="18" fill="url(#glow2a)"/>
+  <rect width="1200" height="470" rx="18" fill="url(#glow2b)"/>
+  <rect x="0.5" y="0.5" width="1199" height="469" rx="17.5" fill="none" stroke="#243044"/>
 
   <text x="48" y="42" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600" letter-spacing="3" fill="#7D8EA8">СОСТОЯНИЯ В ПАНЕЛИ ЗАДАЧИ</text>
   <text x="1152" y="42" text-anchor="end" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#7D8EA8">ЦВЕТ И ЗНАЧОК = СОСТОЯНИЕ</text>
 
-  <!-- Card 1: normal -->
+  <!-- Row 1, card 1: normal -->
   <g>
-    <rect x="48" y="92" width="360" height="150" rx="14" fill="#151B24" stroke="#243044"/>
-    <rect x="153" y="114" width="150" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
-    <g transform="translate(167,127)" fill="none" stroke="#E6EDF3" stroke-width="1.5" stroke-linecap="round">
+    <rect x="48" y="92" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="108" y="114" width="150" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <g transform="translate(122,127)" fill="none" stroke="#E6EDF3" stroke-width="1.5" stroke-linecap="round">
       <rect x="6" y="1" width="10" height="16" rx="5"/>
       <path d="M11 1.5v5"/>
     </g>
-    <text x="192" y="143" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#E6EDF3">82%</text>
-    <text x="228" y="207" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Обычный заряд</text>
-    <text x="228" y="227" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">белый, без значка</text>
+    <text x="147" y="143" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#E6EDF3">82%</text>
+    <text x="183" y="207" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Обычный заряд</text>
+    <text x="183" y="227" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">белый, без значка</text>
   </g>
 
-  <!-- Card 2: low -->
+  <!-- Row 1, card 2: amber -->
   <g>
-    <rect x="432" y="92" width="360" height="150" rx="14" fill="#151B24" stroke="#243044"/>
-    <rect x="537" y="114" width="150" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
-    <g transform="translate(551,126)" fill="none" stroke="#FF5A5A" stroke-width="1.3" stroke-linecap="round">
+    <rect x="334" y="92" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="394" y="114" width="150" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <g transform="translate(408,126)" fill="none" stroke="#FFB454" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6.5 4.5h9a5 5 0 0 1 4.8 6.4l-.7 2.3a3.2 3.2 0 0 1-5.5 1.2L13 13H9l-1.1 1.4a3.2 3.2 0 0 1-5.5-1.2l-.7-2.3A5 5 0 0 1 6.5 4.5Z"/>
+      <path d="M6.5 8v4M4.5 10h4"/>
+    </g>
+    <text x="433" y="143" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFB454">41%</text>
+    <text x="469" y="207" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Скоро заряжать</text>
+    <text x="469" y="227" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">янтарный, до 50%</text>
+  </g>
+
+  <!-- Row 1, card 3: low -->
+  <g>
+    <rect x="620" y="92" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="680" y="114" width="150" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <g transform="translate(694,126)" fill="none" stroke="#FF5A5A" stroke-width="1.3" stroke-linecap="round">
       <rect x="0.5" y="4.5" width="17" height="10" rx="2"/>
       <path d="M4 8h1M7.5 8h1M11 8h1M14.5 8h1M5.5 11.5h7"/>
     </g>
-    <text x="576" y="143" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FF5A5A">12%</text>
-    <text x="612" y="207" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Ниже вашего порога</text>
-    <text x="612" y="227" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">красный, порог 5–50%</text>
+    <text x="719" y="143" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FF5A5A">12%</text>
+    <text x="755" y="207" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Ниже вашего порога</text>
+    <text x="755" y="227" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">красный, порог 5–50%</text>
   </g>
 
-  <!-- Card 3: charging -->
+  <!-- Row 1, card 4: charging -->
   <g>
-    <rect x="816" y="92" width="360" height="150" rx="14" fill="#151B24" stroke="#243044"/>
-    <rect x="909" y="114" width="174" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
-    <g transform="translate(923,126)" fill="none" stroke="#6CCB5F" stroke-width="1.5" stroke-linecap="round">
+    <rect x="906" y="92" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="948" y="114" width="174" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <g transform="translate(962,126)" fill="none" stroke="#6CCB5F" stroke-width="1.5" stroke-linecap="round">
       <path d="M3 11V8.5a7 7 0 0 1 14 0V11"/>
       <rect x="0.5" y="10" width="4.5" height="6.5" rx="2.2"/>
       <rect x="15" y="10" width="4.5" height="6.5" rx="2.2"/>
     </g>
-    <text x="947" y="143" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#6CCB5F">64%</text>
-    <path d="M1006 120l-6 8.5h3.6l-2.4 6.5 7.4-9h-3.6l1-6z" fill="#6CCB5F"/>
-    <text x="996" y="207" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Заряжается</text>
-    <text x="996" y="227" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">зелёная молния</text>
+    <text x="986" y="143" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#6CCB5F">64%</text>
+    <path d="M1045 120l-6 8.5h3.6l-2.4 6.5 7.4-9h-3.6l1-6z" fill="#6CCB5F"/>
+    <text x="1041" y="207" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Заряжается</text>
+    <text x="1041" y="227" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">зелёная молния пульсирует</text>
   </g>
 
-  <!-- Card 4: full -->
+  <!-- Row 2, card 5: full -->
   <g>
-    <rect x="48" y="258" width="360" height="150" rx="14" fill="#151B24" stroke="#243044"/>
-    <rect x="146" y="280" width="164" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
-    <g transform="translate(160,292)">
+    <rect x="48" y="258" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="101" y="280" width="164" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <g transform="translate(115,292)">
       <rect x="0.5" y="2.5" width="19" height="13" rx="3" fill="none" stroke="#60CDFF" stroke-width="1.5"/>
       <rect x="21" y="6.5" width="2.5" height="5" rx="1" fill="#60CDFF"/>
       <rect x="3.5" y="5.5" width="13" height="7" rx="1.5" fill="#60CDFF"/>
     </g>
-    <text x="190" y="309" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#60CDFF">100%</text>
-    <path d="M255 286l-6 8.5h3.6l-2.4 6.5 7.4-9h-3.6l1-6z" fill="#60CDFF"/>
-    <text x="228" y="373" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Заряжено</text>
-    <text x="228" y="393" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">синяя молния, на питании</text>
+    <text x="145" y="309" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#60CDFF">100%</text>
+    <path d="M210 286l-6 8.5h3.6l-2.4 6.5 7.4-9h-3.6l1-6z" fill="#60CDFF"/>
+    <text x="183" y="373" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Заряжено</text>
+    <text x="183" y="393" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">синяя молния, на питании</text>
   </g>
 
-  <!-- Card 5: asleep -->
+  <!-- Row 2, card 6: asleep -->
   <g>
-    <rect x="432" y="258" width="360" height="150" rx="14" fill="#151B24" stroke="#243044"/>
-    <rect x="537" y="280" width="150" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <rect x="334" y="258" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="394" y="280" width="150" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
     <g opacity="0.5">
-      <g transform="translate(551,293)" fill="none" stroke="#8C8C8C" stroke-width="1.5" stroke-linecap="round">
+      <g transform="translate(408,293)" fill="none" stroke="#8C8C8C" stroke-width="1.5" stroke-linecap="round">
         <rect x="6" y="1" width="10" height="16" rx="5"/>
         <path d="M11 1.5v5"/>
       </g>
-      <text x="576" y="309" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#8C8C8C">55%</text>
+      <text x="433" y="309" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="600" fill="#8C8C8C">55%</text>
     </g>
-    <text x="612" y="373" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Спит или нет связи</text>
-    <text x="612" y="393" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">последний известный заряд, серый</text>
+    <text x="469" y="373" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Спит или нет связи</text>
+    <text x="469" y="393" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">последний заряд, серый</text>
   </g>
 
-  <!-- Card 6: wired, unknown -->
+  <!-- Row 2, card 7: wired, unknown -->
   <g>
-    <rect x="816" y="258" width="360" height="150" rx="14" fill="#151B24" stroke="#243044"/>
-    <rect x="946" y="280" width="100" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
-    <g transform="translate(968,291)">
+    <rect x="620" y="258" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="705" y="280" width="100" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <g transform="translate(727,291)">
       <rect x="0.5" y="0.5" width="55" height="21" rx="10.5" fill="none" stroke="#E6EDF3" stroke-width="1.6"/>
       <rect x="13" y="7" width="30" height="8" rx="4" fill="#E6EDF3" opacity="0.85"/>
     </g>
-    <text x="996" y="373" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Кабель, уровень неизвестен</text>
-    <text x="996" y="393" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">Type-C вместо процента, без прочерка</text>
+    <text x="755" y="373" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Кабель, уровень неизвестен</text>
+    <text x="755" y="393" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">Type-C вместо процента</text>
   </g>
 
-  <text x="48" y="436" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#6C7A8C">Порог низкого заряда задаётся отдельно для каждого устройства: 5 / 10 / 15 / 20 / 30 / 40 / 50%.</text>
+  <!-- Row 2, card 8: no devices -->
+  <g>
+    <rect x="906" y="258" width="270" height="150" rx="14" fill="#151B24" stroke="#243044"/>
+    <rect x="991" y="280" width="100" height="44" rx="9" fill="#1F1F1F" stroke="#3A3A3A"/>
+    <g transform="translate(1019,288)" fill="none" stroke="#8C8C8C" stroke-width="1.4">
+      <rect x="0.5" y="1.5" width="26" height="14" rx="3"/>
+      <rect x="28.5" y="5.5" width="3" height="6" rx="1" fill="#8C8C8C" stroke="none"/>
+      <text x="13.5" y="11.5" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="10" font-weight="600" fill="#8C8C8C" stroke="none">?</text>
+    </g>
+    <text x="1041" y="373" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#E6EDF3">Нет данных</text>
+    <text x="1041" y="393" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">устройств пока нет, меню доступно</text>
+  </g>
+
+  <text x="48" y="450" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#6C7A8C">Порог низкого заряда задаётся отдельно для каждого устройства: 5 / 10 / 15 / 20 / 30 / 40 / 50%.</text>
 </svg>
