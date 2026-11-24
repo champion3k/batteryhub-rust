@@ -212,7 +212,7 @@ impl History {
     pub fn report_html(&self) -> String {
         let t = i18n::history();
         let labels = format!(
-            r#"{{"title":"{}","device":"{}","range":"{}","r24":"{}","r7":"{}","r30":"{}","latest":"{}","min":"{}","max":"{}","change":"{}","samples":"{}","rate":"{}","eta":"{}","no_data":"{}","charging":"{}","on_battery":"{}","chart_title":"{}","chart_sub":"{}","insufficient":"{}","generated":"{}","theme":"{}","light":"{}","dark":"{}","heatmap_title":"{}","heatmap_sub":"{}","event_charge":"{}","event_unplug":"{}"}}"#,
+            r#"{{"title":"{}","device":"{}","range":"{}","r24":"{}","r7":"{}","r30":"{}","latest":"{}","min":"{}","max":"{}","change":"{}","samples":"{}","rate":"{}","eta":"{}","no_data":"{}","charging":"{}","on_battery":"{}","chart_title":"{}","chart_sub":"{}","insufficient":"{}","generated":"{}","theme":"{}","light":"{}","dark":"{}","heatmap_title":"{}","heatmap_sub":"{}","event_charge":"{}","event_unplug":"{}","collapse":"{}","expand":"{}"}}"#,
             json(t.title),
             json(t.device),
             json(t.range),
@@ -240,6 +240,8 @@ impl History {
             json(t.heatmap_sub),
             json(t.event_charge),
             json(t.event_unplug),
+            json(t.collapse),
+            json(t.expand),
         );
         TEMPLATE
             .replace("__DATA__", &self.samples_json())
@@ -378,6 +380,10 @@ mod tests {
         assert!(html.contains("heatmap_title"));
         assert!(html.contains("event_charge"));
         assert!(html.contains("prefers-reduced-motion"));
+        assert!(html.contains(r#"id="chart_body""#));
+        assert!(html.contains(r#"id="hm_body""#));
+        assert!(html.contains(r#"class="collapse""#));
+        assert!(html.contains("bh-collapsed"));
     }
 
     #[test]
@@ -447,6 +453,12 @@ h1{font-size:25px;margin:0;letter-spacing:.2px}
 .panel-title{font-size:15px;font-weight:600}
 .panel-sub{color:var(--muted);font-size:12px;margin-top:2px}
 .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.panel-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.collapse{width:32px;height:32px;padding:0;border:1px solid var(--input-border);border-radius:9px;background:var(--input);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:color .18s,border-color .18s}
+.collapse:hover{color:var(--text);border-color:var(--line-strong)}
+.collapse svg{width:16px;height:16px;transition:transform .25s ease}
+.collapse.collapsed svg{transform:rotate(-90deg)}
+.panel-body{overflow:hidden;transition:max-height .3s ease,opacity .24s ease}
 select{background:var(--input);border:1px solid var(--input-border);color:var(--text);padding:9px 11px;border-radius:10px;font:inherit;min-width:190px;max-width:260px}
 .range{display:flex;gap:4px;background:var(--input);border:1px solid var(--input-border);padding:4px;border-radius:11px}
 .range button{background:transparent;border:0;color:var(--muted);padding:7px 13px;border-radius:8px;font:inherit;cursor:pointer;white-space:nowrap}
@@ -469,6 +481,7 @@ canvas{width:100%;height:auto;display:block;border-radius:12px}
 footer{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;margin-top:14px;padding:0 4px}
 @media(max-width:900px){.hero{grid-template-columns:1fr}.gauge{width:128px;height:128px}.gauge b{font-size:36px}.metrics{grid-template-columns:repeat(3,1fr)}.panel-head{align-items:stretch;flex-direction:column}.toolbar{justify-content:flex-start}}
 @media(max-width:520px){.wrap{padding:18px 14px 30px}.metrics{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start}.meta #generated{display:none}h1{font-size:21px}.range button{padding:7px 10px}}
+@media(prefers-reduced-motion:reduce){.panel-body,.collapse svg{transition:none}}
 </style></head>
 <body><div class="wrap">
 <header>
@@ -499,19 +512,21 @@ footer{display:flex;justify-content:space-between;gap:12px;color:var(--muted);fo
 <section class="panel">
   <div class="panel-head">
     <div><div class="panel-title" id="chart_title"></div><div class="panel-sub" id="chart_sub"></div></div>
-    <div class="toolbar"><select id="device"></select>
+    <div class="panel-tools"><div class="toolbar"><select id="device"></select>
       <div class="range" id="ranges"><button data-r="86400" class="active" id="r24"></button><button data-r="604800" id="r7"></button><button data-r="2592000" id="r30"></button></div>
-    </div>
+    </div><button type="button" class="collapse" data-panel="chart" aria-controls="chart_body" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
   </div>
+  <div class="panel-body" id="chart_body">
   <div class="chart-wrap"><canvas id="chart" width="1200" height="390"></canvas><div class="empty" id="empty" hidden><div class="ico">🔋</div><div id="empty_text"></div></div></div>
   <div class="legend"><span><i class="dot"></i><span id="legend_level"></span></span><span><i class="dot green"></i><span id="legend_charge"></span></span></div>
+  </div>
 </section>
 <section class="panel hm-panel">
   <div class="panel-head">
     <div><div class="panel-title" id="hm_title"></div><div class="panel-sub" id="hm_sub"></div></div>
-    <div class="hm-legend"><span>0%</span><i class="hm-scale"></i><span>100%</span></div>
+    <div class="panel-tools"><div class="hm-legend"><span>0%</span><i class="hm-scale"></i><span>100%</span></div><button type="button" class="collapse" data-panel="hm" aria-controls="hm_body" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
   </div>
-  <div class="hm-wrap"><canvas id="heatmap" width="1200" height="330"></canvas></div>
+  <div class="panel-body" id="hm_body"><div class="hm-wrap"><canvas id="heatmap" width="1200" height="330"></canvas></div></div>
 </section>
 <footer><span id="foot_left"></span><span id="foot_right"></span></footer>
 </div>
@@ -538,6 +553,36 @@ function applyTheme(mode,persist){
   if(persist){try{localStorage.setItem('bh-theme',mode)}catch(e){}try{document.cookie='bh-theme='+mode+'; path=/; max-age=31536000; SameSite=Lax'}catch(e){}}
   draw();
 }
+const PANELS_KEY='bh-collapsed';
+function loadCollapsed(){
+  try{const v=JSON.parse(localStorage.getItem(PANELS_KEY)||'[]');return new Set(Array.isArray(v)?v.filter(x=>x==='chart'||x==='hm'):[])}catch(e){return new Set()}
+}
+function saveCollapsed(set){try{localStorage.setItem(PANELS_KEY,JSON.stringify([...set]))}catch(e){}}
+function applyPanel(name,on,animate){
+  const btn=document.querySelector('.collapse[data-panel="'+name+'"]'), body=$(name+'_body');
+  if(!btn||!body) return;
+  const label=on?L.expand:L.collapse;
+  btn.classList.toggle('collapsed',on);
+  btn.setAttribute('aria-expanded',on?'false':'true');
+  btn.title=label; btn.setAttribute('aria-label',label);
+  if(!animate||matchMedia('(prefers-reduced-motion: reduce)').matches){
+    body.style.maxHeight=on?'0px':'none';
+    body.style.opacity=on?'0':'1';
+    return;
+  }
+  const h=body.scrollHeight;
+  body.style.opacity=on?'0':'1';
+  if(on){
+    body.style.maxHeight=h+'px';
+    requestAnimationFrame(()=>{body.style.maxHeight='0px'});
+  }else{
+    body.style.maxHeight='0px';
+    requestAnimationFrame(()=>{body.style.maxHeight=h+'px'});
+    body.addEventListener('transitionend',()=>{
+      if(btn.getAttribute('aria-expanded')==='true') body.style.maxHeight='none';
+    },{once:true});
+  }
+}
 function setup(){
   $('sub').textContent=L.title; $('current_label').textContent=L.latest; $('r24').textContent=L.r24; $('r7').textContent=L.r7; $('r30').textContent=L.r30;
   $('l_min').textContent=L.min; $('l_max').textContent=L.max; $('l_change').textContent=L.change;
@@ -560,6 +605,15 @@ function setup(){
   });
   c.addEventListener('mousemove',e=>{if(!geom){return}const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*c.width/r.width;let best=-1,bd=28;pts.forEach((p,i)=>{const d=Math.abs(geom.X(p.t)-x);if(d<bd){bd=d;best=i}});if(best!==hover){hover=best>=0?best:null;draw();}});
   c.addEventListener('mouseleave',()=>{if(hover!==null){hover=null;draw();}});
+  const saved=loadCollapsed();
+  for(const p of ['chart','hm']) applyPanel(p,saved.has(p),false);
+  document.querySelectorAll('.collapse').forEach(b=>b.onclick=()=>{
+    const on=b.getAttribute('aria-expanded')==='true';
+    applyPanel(b.dataset.panel,on,true);
+    const set=loadCollapsed();
+    if(on) set.add(b.dataset.panel); else set.delete(b.dataset.panel);
+    saveCollapsed(set);
+  });
   applyTheme(document.documentElement.dataset.theme==='light'?'light':'dark',false);
   poll();
   setInterval(poll,2000);

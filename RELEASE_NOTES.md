@@ -18,6 +18,7 @@ Already installed? Use *Check for updates...* in the right-click menu (v1.1 and 
 - **Month at a glance** — a 24 hours × 30 days heatmap in the live dashboard: see at which hours the battery drains.
 - **Charge events on the chart** — dashed markers and labels for *on power* and *unplugged*.
 - **Smooth range switch** — 24 h / 7 / 30 days crossfades instead of jumping, respecting reduced motion.
+- **Collapsible panels** — collapse *Battery level* and *Month at a glance* with the chevron; the choice is remembered.
 - **Light and dark taskbar previews** plus an animated pulse demo in the README; a GitHub social preview image is in `docs/`.
 
 ## New in v1.6.3

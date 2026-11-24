@@ -2173,18 +2173,15 @@ extern "system" fn main_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LR
                     }
                     TIMER_NOTIFY => {
                         let _ = KillTimer(Some(hwnd), TIMER_NOTIFY);
-                        with_app(|a| {
-                            let d = a.tray_data(NOTIFY_UID);
-                            let _ = Shell_NotifyIconW(NIM_DELETE, &d);
-                        });
+                        let d = a.tray_data(NOTIFY_UID);
+                        let _ = Shell_NotifyIconW(NIM_DELETE, &d);
                     }
                     TIMER_PULSE => {
-                        with_app(|a| {
-                            if a.pulsing {
-                                a.pulse_dim = !a.pulse_dim;
-                                a.paint();
-                            }
-                        });
+                        // No nested with_app here: the outer one already holds the App.
+                        if a.pulsing {
+                            a.pulse_dim = !a.pulse_dim;
+                            a.paint();
+                        }
                     }
                     TIMER_BTWATCH => {
                         // Bluetooth connect / disconnect does not add or remove device nodes, so

@@ -317,6 +317,8 @@ pub struct HistoryTexts {
     pub heatmap_sub: &'static str,
     pub event_charge: &'static str,
     pub event_unplug: &'static str,
+    pub collapse: &'static str,
+    pub expand: &'static str,
 }
 
 pub static HISTORY_EN: HistoryTexts = HistoryTexts {
@@ -347,6 +349,8 @@ pub static HISTORY_EN: HistoryTexts = HistoryTexts {
     heatmap_sub: "Average charge by hour, last 30 days",
     event_charge: "on power",
     event_unplug: "unplugged",
+    collapse: "Collapse",
+    expand: "Expand",
 };
 
 pub static HISTORY_RU: HistoryTexts = HistoryTexts {
@@ -377,6 +381,8 @@ pub static HISTORY_RU: HistoryTexts = HistoryTexts {
     heatmap_sub: "Средний заряд по часам за 30 дней",
     event_charge: "на зарядке",
     event_unplug: "снято",
+    collapse: "Свернуть",
+    expand: "Развернуть",
 };
 
 pub fn history() -> &'static HistoryTexts {
