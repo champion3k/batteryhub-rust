@@ -38,6 +38,7 @@ const WM_QUICK_DONE: u32 = WM_APP + 4;
 const WM_UPDATE_CHECKED: u32 = WM_APP + 5;
 const WM_UPDATE_DOWNLOADED: u32 = WM_APP + 6;
 const WM_SHOW_UPDATED: u32 = WM_APP + 7;
+const WM_ICON_DONE: u32 = WM_APP + 8;
 // Not exported by the windows crate's WindowsAndMessaging module.
 const WM_MOUSELEAVE: u32 = 0x02A3;
 const TIMER_POLL: usize = 1;
@@ -173,6 +174,10 @@ struct App {
     low_notified: BTreeSet<String>,
     /// Local battery history (30 days, one sample per 30 minutes).
     history: batteryhub::history::History,
+    /// Per-device icon files and the decoded image cache.
+    icon_paths: BTreeMap<String, String>,
+    icon_sizes: BTreeMap<String, i32>,
+    icon_cache: BTreeMap<String, Option<batteryhub::icons::Icon>>,
 }
 
 thread_local! {
@@ -204,6 +209,18 @@ impl Canvas {
                 let dy = if y < inset + r { inset + r - y } else if y >= h - inset - r { y - (h - inset - r - 1) } else { 0 };
                 if dx * dx + dy * dy <= r * r {
                     self.blend(x, y, c, a);
+                }
+            }
+        }
+    }
+
+    fn blit(&mut self, x: i32, y: i32, icon: &batteryhub::icons::Icon, alpha: u32) {
+        for yy in 0..icon.h {
+            for xx in 0..icon.w {
+                let p = icon.px[(yy * icon.w + xx) as usize];
+                let a = ((p >> 24) & 0xFF) * alpha / 255;
+                if a > 0 {
+                    self.blend(x + xx, y + yy, rgb((p >> 16) as u8, (p >> 8) as u8, p as u8), a);
                 }
             }
         }
@@ -337,9 +354,24 @@ struct Piece {
     /// Index of the device this piece belongs to (for hover hit-testing), None for others.
     dev: Option<usize>,
     m: Mask,
+    /// Full-colour custom icon; when set, `m` is empty.
+    icon: Option<batteryhub::icons::Icon>,
     color: COLORREF,
     alpha: u32,
     gap_after: i32,
+}
+
+impl Piece {
+    fn w(&self) -> i32 {
+        self.icon.as_ref().map(|i| i.w).unwrap_or(self.m.w)
+    }
+    fn h(&self) -> i32 {
+        self.icon.as_ref().map(|i| i.h).unwrap_or(self.m.h)
+    }
+}
+
+fn empty_mask() -> Mask {
+    Mask { w: 0, h: 0, a: Vec::new() }
 }
 
 impl App {
@@ -388,6 +420,7 @@ impl App {
             pieces.push(Piece {
                 dev: None,
                 m: mask("\u{E996}", icons, light),
+                icon: None,
                 color: fg,
                 alpha: 110,
                 gap_after: 0,
@@ -400,31 +433,55 @@ impl App {
             // Lightning bolt on power: green while charging, blue once it reached 100%.
             let bolt_color = ui::bolt_color(d, light);
             let mark = bolt_color.is_some();
+            let icon_px = self.icon_sizes.get(&d.key).copied().unwrap_or(16) as f32;
+            let custom = self.icon_for(&d.key).map(|icon| icon.scaled(px(icon_px)));
+            let (icon_mask, icon) = match custom {
+                Some(icon) => (empty_mask(), Some(icon)),
+                None => {
+                    let size = px(icon_px).max(8);
+                    let glyph_font = if size == px(16.0) { icons } else { make_font(size, 400, "Segoe Fluent Icons", "Segoe MDL2 Assets", 0) };
+                    let m = mask(&d.kind.glyph().to_string(), glyph_font, light);
+                    if glyph_font.0 != icons.0 {
+                        unsafe {
+                            let _ = DeleteObject(HGDIOBJ(glyph_font.0));
+                        }
+                    }
+                    (m, None)
+                }
+            };
             pieces.push(Piece {
                 dev: Some(i),
-                m: mask(&d.kind.glyph().to_string(), icons, light),
+                m: icon_mask,
+                icon,
                 color: fg,
                 alpha,
                 gap_after: px(5.0),
             });
-            let t = if !d.level_text.is_empty() && d.percent < 0 {
-                d.level_text.clone()
-            } else if d.percent >= 0 {
-                format!("{}%", d.percent)
-            } else {
-                "?".into()
-            };
-            pieces.push(Piece {
-                dev: Some(i),
-                m: mask(&t, text, light),
-                color: if low { red } else { fg },
-                alpha,
-                gap_after: if mark { px(2.0) } else { 0 },
-            });
+            // On power without a reported percentage the bolt already shows the state; do not
+            // print a meaningless dash next to it.
+            let hide_level = d.percent < 0 && d.level_text.is_empty() && d.charging && !d.is_full();
+            if !hide_level {
+                let t = if !d.level_text.is_empty() && d.percent < 0 {
+                    d.level_text.clone()
+                } else if d.percent >= 0 {
+                    format!("{}%", d.percent)
+                } else {
+                    "—".into()
+                };
+                pieces.push(Piece {
+                    dev: Some(i),
+                    m: mask(&t, text, light),
+                    icon: None,
+                    color: if low { red } else { fg },
+                    alpha,
+                    gap_after: if mark { px(2.0) } else { 0 },
+                });
+            }
             if let Some(c) = bolt_color {
                 pieces.push(Piece {
                     dev: Some(i),
                     m: mask("\u{E945}", bolt, light),
+                    icon: None,
                     color: c,
                     alpha,
                     gap_after: 0,
@@ -440,6 +497,7 @@ impl App {
             pieces.push(Piece {
                 dev: None,
                 m: mask("\u{E72C}", bolt, light),
+                icon: None,
                 color: fg,
                 alpha: 170,
                 gap_after: 0,
@@ -457,7 +515,7 @@ impl App {
         }
         let h = (tb.bottom - tb.top).clamp(px(24.0), px(64.0));
         let pad = px(8.0);
-        let w = pad * 2 + pieces.iter().map(|p| p.m.w + p.gap_after).sum::<i32>();
+        let w = pad * 2 + pieces.iter().map(|p| p.w() + p.gap_after).sum::<i32>();
         // Alpha 1 everywhere: fully transparent pixels of a layered window let clicks fall through.
         let mut cv = Canvas {
             w,
@@ -476,21 +534,25 @@ impl App {
             if let Some(dev) = p.dev {
                 // Each device owns its pieces plus half of the gap around them.
                 match self.hits.last_mut() {
-                    Some(h) if h.2 == dev => h.1 = x + p.m.w + p.gap_after / 2,
+                    Some(h) if h.2 == dev => h.1 = x + p.w() + p.gap_after / 2,
                     _ => {
                         let from = self.hits.last().map(|h| h.1).unwrap_or(0);
-                        self.hits.push((from, x + p.m.w + p.gap_after / 2, dev));
+                        self.hits.push((from, x + p.w() + p.gap_after / 2, dev));
                     }
                 }
             }
-            let y0 = ((h - p.m.h) / 2 + px(self.offset_y as f32)).clamp(0, (h - p.m.h).max(0));
-            for yy in 0..p.m.h {
-                for xx in 0..p.m.w {
-                    let a = p.m.a[(yy * p.m.w + xx) as usize] as u32 * p.alpha / 255;
-                    cv.blend(x + xx, y0 + yy, p.color, a);
+            let y0 = ((h - p.h()) / 2 + px(self.offset_y as f32)).clamp(0, (h - p.h()).max(0));
+            if let Some(icon) = &p.icon {
+                cv.blit(x, y0, icon, p.alpha);
+            } else {
+                for yy in 0..p.m.h {
+                    for xx in 0..p.m.w {
+                        let a = p.m.a[(yy * p.m.w + xx) as usize] as u32 * p.alpha / 255;
+                        cv.blend(x + xx, y0 + yy, p.color, a);
+                    }
                 }
             }
-            x += p.m.w + p.gap_after;
+            x += p.w() + p.gap_after;
         }
         if let Some(last) = self.hits.last_mut() {
             last.1 = w;
@@ -887,7 +949,7 @@ impl App {
             .enumerate()
             .map(|(i, d)| {
                 let th = settings::threshold(SETTINGS_KEY, &d.key);
-                let text = if d.percent >= 0 { d.percent.to_string() } else { "?".into() };
+                let text = if d.percent >= 0 { d.percent.to_string() } else if d.charging { "⚡".into() } else { "—".into() };
                 (
                     d.key.clone(),
                     text,
@@ -1044,7 +1106,7 @@ impl App {
             i18n::t().asleep_suffix
         } else if d.is_full() && numeric {
             i18n::t().full_suffix
-        } else if d.charging && numeric {
+        } else if d.charging {
             i18n::t().charging_suffix
         } else {
             ""
@@ -1222,6 +1284,11 @@ impl App {
                 self.devices.remove(&s.key);
                 continue;
             }
+            if s.percent < 0 && !s.is_wired() {
+                if let Some(p) = self.history.last_percent(&s.key) {
+                    s.percent = p;
+                }
+            }
             s.eta_hours = if s.charging || s.is_full() { None } else { self.history.eta_hours(&s.key) };
             if !dnd {
                 let threshold = settings::threshold(SETTINGS_KEY, &s.key);
@@ -1335,6 +1402,18 @@ impl App {
         self.offset_y = batteryhub::util::reg_get_dword(SETTINGS_KEY, "TaskbarOffsetY").unwrap_or(0) as i32;
         self.background = batteryhub::util::reg_get_dword(SETTINGS_KEY, "WidgetBackground").unwrap_or(0) != 0;
         self.choice = widget_choice();
+        self.icon_paths = settings::load_icons(SETTINGS_KEY);
+        self.icon_sizes = settings::load_icon_sizes(SETTINGS_KEY);
+        self.icon_cache.clear();
+    }
+
+    fn icon_for(&mut self, key: &str) -> Option<batteryhub::icons::Icon> {
+        if let Some(cached) = self.icon_cache.get(key) {
+            return cached.clone();
+        }
+        let icon = self.icon_paths.get(key).and_then(|p| batteryhub::icons::load(p));
+        self.icon_cache.insert(key.to_string(), icon.clone());
+        icon
     }
 }
 
@@ -1842,7 +1921,7 @@ unsafe fn show_menu() {
                     with_app(|a| a.manual_refresh(false));
                 }
                 ID_HISTORY => {
-                    let _ = batteryhub::history::open_report();
+                    let _ = batteryhub::history::open_live();
                 }
                 ID_CHECK_UPDATES => check_for_updates(main, false),
                 ID_BACKGROUND => {
@@ -1935,6 +2014,65 @@ unsafe fn show_menu() {
                         if let Some(d) = devices.get(dev) {
                             settings::set_threshold(SETTINGS_KEY, &d.key, level);
                             with_app(|a| a.paint());
+                        }
+                    } else if let Some((dev, action)) = settings::decode_icon_menu_id(id) {
+                        if let Some(d) = devices.get(dev) {
+                            match action {
+                                0 => {
+                                    if let Some(path) = batteryhub::icons::choose_file(main) {
+                                        match batteryhub::icons::store_file(&d.key, &path) {
+                                            Ok(stored) => {
+                                                with_app(|a| {
+                                                    a.icon_paths.insert(d.key.clone(), stored.to_string_lossy().to_string());
+                                                    settings::save_icons(SETTINGS_KEY, &a.icon_paths);
+                                                    a.icon_cache.remove(&d.key);
+                                                    a.paint();
+                                                    if a.fallback {
+                                                        a.sync_tray();
+                                                    }
+                                                });
+                                            }
+                                            Err(e) => {
+                                                message(main, &e, MB_OK | MB_ICONWARNING);
+                                            }
+                                        }
+                                    }
+                                }
+                                1 => {
+                                    let key = d.key.clone();
+                                    let name = d.name.clone();
+                                    let main_ptr = main.0 as usize;
+                                    std::thread::spawn(move || {
+                                        let res = batteryhub::icons::fetch_by_name(&name)
+                                            .and_then(|bytes| batteryhub::icons::store_bytes(&key, &bytes));
+                                        let ptr = Box::into_raw(Box::new((key, res)));
+                                        let hwnd = HWND(main_ptr as *mut c_void);
+                                        let _ = PostMessageW(Some(hwnd), WM_ICON_DONE, WPARAM(0), LPARAM(ptr as isize));
+                                    });
+                                }
+                                n => {
+                                    if let Some(size) = settings::icon_size_for_action(n) {
+                                        with_app(|a| {
+                                            a.icon_sizes.insert(d.key.clone(), size);
+                                            settings::save_icon_sizes(SETTINGS_KEY, &a.icon_sizes);
+                                            a.paint();
+                                            if a.fallback {
+                                                a.sync_tray();
+                                            }
+                                        });
+                                    } else {
+                                        with_app(|a| {
+                                            a.icon_paths.remove(&d.key);
+                                            settings::save_icons(SETTINGS_KEY, &a.icon_paths);
+                                            a.icon_cache.remove(&d.key);
+                                            a.paint();
+                                            if a.fallback {
+                                                a.sync_tray();
+                                            }
+                                        });
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -2044,6 +2182,23 @@ extern "system" fn main_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LR
                 // Shown outside the timer handler, so the app is not borrowed while the box is open.
                 let text = *Box::from_raw(lp.0 as *mut String);
                 message(hwnd, &text, MB_OK | MB_ICONINFORMATION);
+                LRESULT(0)
+            }
+            WM_ICON_DONE => {
+                let (key, result) = *Box::from_raw(lp.0 as *mut (String, Result<std::path::PathBuf, String>));
+                match result {
+                    Ok(path) => {
+                        with_app(|a| {
+                            a.icon_paths.insert(key, path.to_string_lossy().to_string());
+                            settings::save_icons(SETTINGS_KEY, &a.icon_paths);
+                            a.icon_cache.clear();
+                            a.paint();
+                        });
+                    }
+                    Err(_) => {
+                        message(hwnd, i18n::t().icon_not_found, MB_OK | MB_ICONWARNING);
+                    }
+                }
                 LRESULT(0)
             }
             WM_UPDATE_CHECKED => {

@@ -7,6 +7,7 @@ pub mod device;
 pub mod drivers;
 pub mod hid;
 pub mod history;
+pub mod icons;
 pub mod i18n;
 pub mod install;
 pub mod listen;

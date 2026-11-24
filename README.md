@@ -71,6 +71,10 @@
 | **AULA F75 / F87 Pro / F99** | 2.4 ГГц, `3554:FA09` | 🟡 Добавлено, на живом F75 не проверено |
 | **Attack Shark** на Xenta | 2.4 ГГц, `1D57:FA60` | ✅ Протокол Xenta |
 | **Attack Shark R3 и Rongyuan-мыши** | 2.4 ГГц, `3151:402D` и др. | 🟡 Добавлено по протоколу Rongyuan |
+| **WOBKEY Rainy 75 Pro** | USB `320F:5055` / 2.4 ГГц `320F:5088` | 🟡 Добавлено, на живом устройстве не проверено |
+| **IO by Red Square Aurora** | 2.4 ГГц `3554:FB08` / USB `3554:FB09` | 🟡 Добавлено по протоколу CompX |
+| **VXE R1 SE+ / R1 Pro Max / VGN Dragonfly 4K** | 2.4 ГГц `373B:1085`, `3554:F58A`, `3554:F505`; USB `3554:F58F`, `3554:F58C`, `3554:F506` | 🟡 Добавлено по протоколу CompX |
+| **VXE V1 / Siren V1** | Bluetooth | 🟡 Через уровень Windows; донгл 2.4 ГГц заряд не отдаёт |
 | Logitech, Razer, SteelSeries, Corsair, HyperX, Glorious, DualSense, Xbox, Bluetooth | — | ✅ Из upstream BatteryHub |
 
 > **HS5 V2:** донгл 2.4 ГГц передаёт только звук, медиа-клавиши и канал прошивки — заряд в нём отсутствует. Спарьте наушники по **Bluetooth** один раз; режим 2.4 ГГц можно оставить для звука, гарнитура держит оба подключения одновременно.
@@ -79,7 +83,7 @@
 
 ## Установка
 
-1. Скачайте **BatteryHub-Taskbar-Setup-v1.6.1.exe** из [Releases](../../releases/latest).
+1. Скачайте **BatteryHub-Taskbar-Setup-v1.6.3.exe** из [Releases](../../releases/latest).
 2. Запустите, выберите **Install**. Права администратора не нужны.
 3. Готово: виджет появится слева от часов. Правый клик — меню.
 

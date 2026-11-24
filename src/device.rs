@@ -101,7 +101,7 @@ impl Default for DeviceStatus {
 }
 
 impl DeviceStatus {
-    /// Short status text, e.g. "93%", "45% ⚡", "Full ✓", "?".
+    /// Short status text, e.g. "93%", "45% ⚡", "Full ✓", "— ⚡".
     pub fn status_text(&self) -> String {
         if !self.connected {
             return i18n::t().disconnected.into();
@@ -111,7 +111,7 @@ impl DeviceStatus {
         } else if !self.level_text.is_empty() {
             self.level_text.clone()
         } else {
-            "?".into()
+            "—".into()
         };
         if self.is_full() {
             text.push_str(" ✓");
@@ -134,15 +134,20 @@ impl DeviceStatus {
         self.connected && self.charging && !self.is_full()
     }
 
-    /// Level text: "32%", a coarse level ("Low"), or "?".
+    /// Level text: "32%", a coarse level ("Low"), or "—" when the device does not report one.
     pub fn level(&self) -> String {
         if self.percent >= 0 {
             format!("{}%", self.percent)
         } else if !self.level_text.is_empty() {
             self.level_text.clone()
         } else {
-            "?".into()
+            "—".into()
         }
+    }
+
+    /// Device read through a cable; its HID report may not carry a percentage.
+    pub fn is_wired(&self) -> bool {
+        self.via == "USB cable"
     }
 
     /// "32%, charging" / "100%, fully charged" / "32%, on battery" - for menus and tooltips.
@@ -275,6 +280,9 @@ pub fn poll_hardware(ids: &[(u16, u16)]) -> Vec<DeviceStatus> {
     drivers::aula::poll(&mut ctx);
     drivers::blackshark::poll(&mut ctx);
     drivers::wlmouse::poll(&mut ctx);
+    drivers::wobkey::poll(&mut ctx);
+    drivers::io_aurora::poll(&mut ctx);
+    drivers::vxe::poll(&mut ctx);
     drivers::playstation::poll(&mut ctx);
     drivers::generic::poll(&mut ctx);
     ctx.out
@@ -334,6 +342,22 @@ mod missing_tests {
     fn bluetooth_devices_disappear_when_disconnected() {
         assert_eq!(missing_device(None, false, 300, 1, 150), Missing::Remove);
     }
+
+    #[test]
+    fn wired_unknown_level_is_an_honest_dash() {
+        let d = DeviceStatus {
+            key: "ajazz:3151:5007".into(),
+            name: "AJAZZ AJ159 APEX".into(),
+            via: "USB cable".into(),
+            percent: -1,
+            charging: true,
+            ..Default::default()
+        };
+        assert!(d.is_wired());
+        assert_eq!(d.level(), "—");
+        assert_eq!(d.status_text(), "— ⚡");
+        assert!(d.charge_text().starts_with("—,"));
+    }
 }
 
 /// Whether a HID product (vid, pid) was present in the latest device enumeration.
@@ -379,6 +403,9 @@ fn poll_with(colls: Vec<HidColl>) -> Vec<DeviceStatus> {
     drivers::aula::poll(&mut ctx);
     drivers::blackshark::poll(&mut ctx);
     drivers::wlmouse::poll(&mut ctx);
+    drivers::wobkey::poll(&mut ctx);
+    drivers::io_aurora::poll(&mut ctx);
+    drivers::vxe::poll(&mut ctx);
     drivers::playstation::poll(&mut ctx);
     drivers::airpods::poll(&mut ctx);
     drivers::bluetooth::poll(&mut ctx);

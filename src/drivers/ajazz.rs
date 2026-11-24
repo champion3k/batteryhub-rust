@@ -32,6 +32,25 @@ fn read_percent(c: &hid::HidColl) -> Option<u8> {
 
 pub fn poll(ctx: &mut PollContext) {
     for (vid, pid) in ctx.products(VID) {
+        // Wired AJ159 APEX: the receiver disappears and the mouse enumerates as 3151:4026.
+        // Its vendor collection does not expose a battery value, so report an unknown level
+        // while on the cable instead of inventing one from history.
+        if pid == 0x4026 {
+            if !ctx.find(vid, pid, |c| c.page() == 0xFFFF && c.usage() == 0x0002 && c.feat_len() >= 64).is_empty() {
+                let s = DeviceStatus {
+                    key: "ajazz:3151:5007".into(),
+                    name: "AJAZZ AJ159 APEX".into(),
+                    kind: DeviceKind::Mouse,
+                    via: "USB cable".into(),
+                    percent: -1,
+                    charging: true,
+                    hw: Some((vid, pid)),
+                    ..Default::default()
+                };
+                ctx.add(s, vid, pid);
+                break;
+            }
+        }
         for c in ctx.find(vid, pid, |c| c.page() == 0xFFFF && c.usage() == 0x0002 && c.feat_len() >= 65) {
             let Some(pct) = read_percent(&c) else { continue };
             let name = if pid == 0x5007 {

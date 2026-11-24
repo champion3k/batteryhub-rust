@@ -90,6 +90,12 @@ pub struct Texts {
     pub checking_updates: &'static str,
     pub exit: &'static str,
     pub history: &'static str,
+    pub icon: &'static str,
+    pub icon_file: &'static str,
+    pub icon_auto: &'static str,
+    pub icon_reset: &'static str,
+    pub icon_size: &'static str,
+    pub icon_not_found: &'static str,
     pub dnd: &'static str,
     pub red_warning: &'static str,
     pub default_suffix: &'static str,
@@ -127,6 +133,12 @@ pub static EN: Texts = Texts {
     checking_updates: "Checking for updates...",
     exit: "Exit",
     history: "Battery history...",
+    icon: "Icon",
+    icon_file: "Choose file...",
+    icon_auto: "Find by device name",
+    icon_reset: "Reset icon",
+    icon_size: "Icon size",
+    icon_not_found: "No device image found. Choose a PNG/ICO file instead.",
     dnd: "Do not disturb",
     red_warning: "Red warning at or below:",
     default_suffix: "  (default)",
@@ -164,6 +176,12 @@ pub static RU: Texts = Texts {
     checking_updates: "Проверка обновлений...",
     exit: "Выход",
     history: "История заряда...",
+    icon: "Иконка",
+    icon_file: "Выбрать файл...",
+    icon_auto: "Найти по названию",
+    icon_reset: "Сбросить иконку",
+    icon_size: "Размер иконки",
+    icon_not_found: "Изображение устройства не найдено. Выберите PNG/ICO вручную.",
     dnd: "Не беспокоить",
     red_warning: "Красный при заряде не выше:",
     default_suffix: "  (по умолчанию)",
@@ -292,6 +310,9 @@ pub struct HistoryTexts {
     pub chart_sub: &'static str,
     pub insufficient: &'static str,
     pub generated: &'static str,
+    pub theme: &'static str,
+    pub light: &'static str,
+    pub dark: &'static str,
 }
 
 pub static HISTORY_EN: HistoryTexts = HistoryTexts {
@@ -315,6 +336,9 @@ pub static HISTORY_EN: HistoryTexts = HistoryTexts {
     chart_sub: "Hover the chart for exact values",
     insufficient: "Not enough data for an estimate yet",
     generated: "Generated",
+    theme: "Theme",
+    light: "Light theme",
+    dark: "Dark theme",
 };
 
 pub static HISTORY_RU: HistoryTexts = HistoryTexts {
@@ -338,6 +362,9 @@ pub static HISTORY_RU: HistoryTexts = HistoryTexts {
     chart_sub: "Наведите на график для точных значений",
     insufficient: "Пока мало данных для прогноза",
     generated: "Сформировано",
+    theme: "Тема",
+    light: "Светлая тема",
+    dark: "Тёмная тема",
 };
 
 pub fn history() -> &'static HistoryTexts {

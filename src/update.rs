@@ -130,6 +130,16 @@ impl Drop for Handle {
 
 /// HTTPS GET (redirects followed, e.g. to GitHub's download servers). Errors on non-200 answers.
 pub fn http_get(url: &str) -> Result<Vec<u8>, String> {
+    http_get_with(url, "application/vnd.github+json", None)
+}
+
+/// HTTPS GET for image search / image CDNs, with a browser-like user agent.
+pub fn http_get_web(url: &str) -> Result<Vec<u8>, String> {
+    const UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+    http_get_with(url, "text/html,application/xhtml+xml,image/*,*/*", Some(UA))
+}
+
+fn http_get_with(url: &str, accept: &str, user_agent: Option<&str>) -> Result<Vec<u8>, String> {
     let rest = url.strip_prefix("https://").ok_or("only https URLs are used")?;
     let (host, path) = rest.split_once('/').map(|(h, p)| (h, format!("/{p}"))).unwrap_or((rest, "/".into()));
     unsafe {
@@ -160,8 +170,12 @@ pub fn http_get(url: &str) -> Result<Vec<u8>, String> {
         if request.0.is_null() {
             return Err("cannot create the request".into());
         }
-        let headers: Vec<u16> = "Accept: application/vnd.github+json\r\n".encode_utf16().collect();
-        let _ = WinHttpAddRequestHeaders(request.0, &headers, WINHTTP_ADDREQ_FLAG_ADD);
+        let headers = match user_agent {
+            Some(ua) => format!("Accept: {accept}\r\nUser-Agent: {ua}\r\n"),
+            None => format!("Accept: {accept}\r\n"),
+        };
+        let headers: Vec<u16> = headers.encode_utf16().collect();
+        let _ = WinHttpAddRequestHeaders(request.0, &headers, WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE);
         WinHttpSendRequest(request.0, None, None, 0, 0, 0).map_err(|e| format!("no connection ({})", e.message()))?;
         WinHttpReceiveResponse(request.0, std::ptr::null_mut()).map_err(|e| format!("no answer ({})", e.message()))?;
         let mut status = 0u32;
