@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="372" viewBox="0 0 1200 372" role="img" aria-label="Схема: устройство, Windows HID или Bluetooth, драйвер модели, вывод в панель задач, трей, историю и уведомления">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <radialGradient id="glow3" cx="0.5" cy="0" r="0.9">
+      <stop offset="0" stop-color="#0078D4" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#0078D4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="372" rx="18" fill="url(#bg3)"/>
+  <rect width="1200" height="372" rx="18" fill="url(#glow3)"/>
+  <rect x="0.5" y="0.5" width="1199" height="371" rx="17.5" fill="none" stroke="#243044"/>
+
+  <text x="48" y="42" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600" letter-spacing="3" fill="#7D8EA8">КАК ПРИЛОЖЕНИЕ ЧИТАЕТ ЗАРЯД</text>
+  <text x="1152" y="42" text-anchor="end" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#7D8EA8">0.2 МБ RAM · ОДИН EXE · БЕЗ СЛУЖБЫ</text>
+
+  <!-- Stage 1 -->
+  <rect x="48" y="76" width="240" height="164" rx="14" fill="#151B24" stroke="#243044"/>
+  <text x="68" y="108" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3">Устройства</text>
+  <g fill="none" stroke="#8FB4DE" stroke-width="1.5" stroke-linecap="round">
+    <g transform="translate(70,124)">
+      <rect x="0.5" y="4.5" width="21" height="12" rx="2.5"/>
+      <path d="M5 8.5h1M9 8.5h1M13 8.5h1M17 8.5h1M6.5 12.5h8"/>
+    </g>
+    <g transform="translate(114,124)">
+      <rect x="7" y="1" width="11" height="19" rx="5.5"/>
+      <path d="M12.5 1.5v6"/>
+    </g>
+    <g transform="translate(154,124)">
+      <path d="M3 14V10a9 9 0 0 1 18 0v4"/>
+      <rect x="0.5" y="12.5" width="5.5" height="8" rx="2.7"/>
+      <rect x="18" y="12.5" width="5.5" height="8" rx="2.7"/>
+    </g>
+    <g transform="translate(196,125)">
+      <rect x="1" y="4" width="22" height="13" rx="6.5"/>
+      <path d="M7.5 8v5M5 10.5h5"/>
+      <circle cx="16.5" cy="9.5" r="1.1" fill="#8FB4DE" stroke="none"/>
+      <circle cx="19" cy="12" r="1.1" fill="#8FB4DE" stroke="none"/>
+    </g>
+  </g>
+  <text x="68" y="176" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">мышь, клавиатура, наушники,</text>
+  <text x="68" y="194" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">геймпад, кабель</text>
+  <text x="68" y="220" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="600" fill="#60CDFF">2.4 ГГц · USB · Bluetooth</text>
+
+  <path d="M298 150l12 8-12 8" fill="none" stroke="#3D5573" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Stage 2 -->
+  <rect x="336" y="76" width="240" height="164" rx="14" fill="#151B24" stroke="#243044"/>
+  <text x="356" y="108" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3">Windows</text>
+  <text x="356" y="140" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#E6EDF3">HID-коллекции</text>
+  <text x="356" y="162" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#E6EDF3">Bluetooth LE</text>
+  <text x="356" y="196" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">VID:PID и тип отчёта</text>
+  <text x="356" y="214" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">без установки драйверов</text>
+
+  <path d="M586 150l12 8-12 8" fill="none" stroke="#3D5573" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Stage 3 -->
+  <rect x="624" y="76" width="240" height="164" rx="14" fill="#151B24" stroke="#243044"/>
+  <text x="644" y="108" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3">Драйвер модели</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#A9B6C7">
+    <rect x="644" y="122" width="96" height="22" rx="11" fill="#1B2432" stroke="#2C3A4E"/>
+    <text x="692" y="137" text-anchor="middle">SONiX / AJAZZ</text>
+    <rect x="748" y="122" width="96" height="22" rx="11" fill="#1B2432" stroke="#2C3A4E"/>
+    <text x="796" y="137" text-anchor="middle">CompX</text>
+    <rect x="644" y="152" width="96" height="22" rx="11" fill="#1B2432" stroke="#2C3A4E"/>
+    <text x="692" y="167" text-anchor="middle">Evision</text>
+    <rect x="748" y="152" width="96" height="22" rx="11" fill="#1B2432" stroke="#2C3A4E"/>
+    <text x="796" y="167" text-anchor="middle">Xenta</text>
+    <rect x="644" y="182" width="96" height="22" rx="11" fill="#1B2432" stroke="#2C3A4E"/>
+    <text x="692" y="197" text-anchor="middle">Rongyuan</text>
+    <rect x="748" y="182" width="96" height="22" rx="11" fill="#1B2432" stroke="#2C3A4E"/>
+    <text x="796" y="197" text-anchor="middle">Sony</text>
+  </g>
+  <text x="644" y="224" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8B98A9">затем Generic HID / BT</text>
+
+  <path d="M874 150l12 8-12 8" fill="none" stroke="#3D5573" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Stage 4 -->
+  <rect x="912" y="76" width="240" height="164" rx="14" fill="#151B24" stroke="#243044"/>
+  <text x="932" y="108" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3">Вывод</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#E6EDF3">
+    <circle cx="938" cy="130" r="3" fill="#E6EDF3"/>
+    <text x="952" y="134">панель задач</text>
+    <circle cx="938" cy="154" r="3" fill="#6CCB5F"/>
+    <text x="952" y="158">трей, если панель нестандартная</text>
+    <circle cx="938" cy="178" r="3" fill="#60CDFF"/>
+    <text x="952" y="182">история и живой прогноз</text>
+    <circle cx="938" cy="202" r="3" fill="#FF5A5A"/>
+    <text x="952" y="206">уведомления о заряде</text>
+  </g>
+
+  <text x="48" y="284" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#6C7A8C">Опрос идёт по расписанию (1–60 мин) и сразу при подключении или отключении устройства.</text>
+  <text x="48" y="306" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#6C7A8C">Новый протокол — это один модуль в src/drivers/: VID:PID, запрос, разбор ответа.</text>
+</svg>
